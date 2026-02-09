@@ -176,7 +176,10 @@ export function ModelsTable({
                         </span>
                       </div>
                       {showIncompleteWarning ? (
-                        <span className="badge badge-warning">INCOMPLETE PROVIDER LIMITS</span>
+                        <span className="badge badge-warning">
+                          INCOMPLETE PROVIDER LIMITS
+                          <span className="info-icon" data-tooltip="This model is missing a listed context_length or max_completion_tokens in its upstream provider metadata">i</span>
+                        </span>
                       ) : null}
                       {isPaid ? (
                         <span className="badge badge-paid">PAID</span>
