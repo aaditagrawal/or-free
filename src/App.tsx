@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { CommandPalette } from './components/CommandPalette'
+import { ConfigGenerator } from './components/ConfigGenerator'
 import { EmptyState } from './components/EmptyState'
 import { ErrorState } from './components/ErrorState'
 import { Header } from './components/Header'
@@ -24,7 +25,7 @@ function formatUpdatedAt(timestamp: number): string {
 
 function App() {
   const todayUtc = getUtcDateStamp()
-  const { search } = useHashRouter()
+  const { route, search, navigate } = useHashRouter()
   const [isPaletteOpen, setPaletteOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const { state, update, toggleListFilter, clearFilters, setProviderMode, setSort } = useExplorerState(search)
@@ -82,6 +83,25 @@ function App() {
     }
   }
 
+  if (route === 'config') {
+    return (
+      <div className="app-shell">
+        <main className="app-layout">
+          {modelsQuery.isLoading ? (
+            <section className="panel state-panel">
+              <h2>Loading models...</h2>
+            </section>
+          ) : (
+            <ConfigGenerator
+              models={freeAndUnexpired}
+              onBack={() => navigate('explorer')}
+            />
+          )}
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="app-shell">
       <main className="app-layout">
@@ -95,6 +115,7 @@ function App() {
           onRefresh={() => void modelsQuery.refetch()}
           theme={theme}
           onToggleTheme={toggleTheme}
+          onNavigateConfig={() => navigate('config')}
         />
 
         <Toolbar

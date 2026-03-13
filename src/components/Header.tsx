@@ -10,6 +10,7 @@ type HeaderProps = {
   onRefresh: () => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
+  onNavigateConfig: () => void;
 };
 
 export function Header({
@@ -22,6 +23,7 @@ export function Header({
   onRefresh,
   theme,
   onToggleTheme,
+  onNavigateConfig,
 }: HeaderProps) {
   return (
     <>
@@ -62,6 +64,13 @@ export function Header({
           </div>
         </div>
         <div className="stats-actions">
+          <button
+            type="button"
+            onClick={onNavigateConfig}
+            className="button button-small button-accent"
+          >
+            Config Gen
+          </button>
           <button
             type="button"
             onClick={onToggleTheme}

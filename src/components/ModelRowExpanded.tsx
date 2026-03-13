@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { DerivedModel } from '../types/explorer'
 import type { OpenRouterPricing } from '../types/openrouter'
+import { formatModelConfigSnippet } from '../lib/opencode'
 
 type ModelRowExpandedProps = {
   model: DerivedModel
@@ -50,6 +51,7 @@ const PRICING_LABELS: Array<{ key: keyof OpenRouterPricing; label: string }> = [
 
 export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpandedProps) {
   const [copied, setCopied] = useState(false)
+  const [configCopied, setConfigCopied] = useState(false)
 
   const handleCopyJson = async () => {
     const json = formatJson(model)
@@ -206,6 +208,28 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           </div>
         </dl>
       </div>
+
+      <details className="json-details">
+        <summary>OpenCode Config</summary>
+        <div className="json-details-toolbar">
+          <button
+            type="button"
+            className="button button-small"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(formatModelConfigSnippet(model))
+                setConfigCopied(true)
+                window.setTimeout(() => setConfigCopied(false), 1600)
+              } catch { /* noop */ }
+            }}
+          >
+            {configCopied ? 'Copied' : 'Copy Config'}
+          </button>
+        </div>
+        <pre className="json-preview" aria-label={`OpenCode config for ${model.id}`}>
+          {formatModelConfigSnippet(model)}
+        </pre>
+      </details>
 
       <details className="json-details">
         <summary>Raw JSON</summary>

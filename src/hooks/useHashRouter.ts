@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
-export type Route = 'explorer' | 'request'
+export type Route = 'explorer' | 'request' | 'config'
 
 type HashState = {
   route: Route
@@ -10,7 +10,7 @@ type HashState = {
 export function parseHash(hash: string): HashState {
   const stripped = hash.replace(/^#\/?/, '')
   const [segment, ...rest] = stripped.split('?')
-  const route = segment === 'request' ? 'request' : 'explorer'
+  const route = segment === 'request' ? 'request' : segment === 'config' ? 'config' : 'explorer'
   const search = rest.join('?')
   return { route, search: search ? `?${search}` : '' }
 }
