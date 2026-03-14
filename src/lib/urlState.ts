@@ -157,7 +157,11 @@ export function serializeExplorerState(state: ExplorerState): string {
   setParamIfNotDefault(params, 'createdTo', state.createdTo, defaults.createdTo)
   setParamIfNotDefault(params, 'expiryMode', state.expiryMode, defaults.expiryMode)
   setParamIfNotDefault(params, 'pricing', state.pricingFilter, defaults.pricingFilter)
-  setParamIfNotDefault(params, 'providerMode', state.providerMode, defaults.providerMode)
+  // Always serialize providerMode — its default depends on user preference (localStorage),
+  // so omitting it would cause the wrong mode when sharing URLs or round-tripping.
+  if (state.providerMode) {
+    params.set('providerMode', state.providerMode)
+  }
   setParamIfNotDefault(params, 'sort', state.sortKey, defaults.sortKey)
   setParamIfNotDefault(params, 'dir', state.sortDirection, defaults.sortDirection)
 
