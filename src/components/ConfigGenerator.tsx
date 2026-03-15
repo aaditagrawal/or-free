@@ -81,8 +81,8 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
         </div>
         <p className="config-lede">
           Select free models below to generate an <code>opencode.json</code> configuration file.
-          You'll need to set <code>OPENROUTER_API_KEY</code> in your shell profile
-          (<code>~/.bashrc</code> or <code>~/.zshrc</code>):
+          Models are configured under the OpenRouter provider. Set <code>OPENROUTER_API_KEY</code> in
+          your shell profile (<code>~/.bashrc</code> or <code>~/.zshrc</code>):
         </p>
         <pre className="config-env-hint">export OPENROUTER_API_KEY="sk-or-..."</pre>
       </div>
@@ -97,31 +97,35 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
                 <dd>JSON schema URL for validation and editor autocomplete</dd>
               </div>
               <div>
-                <dt>disabled_providers</dt>
-                <dd>Array of provider IDs to skip (empty means all enabled)</dd>
+                <dt>model</dt>
+                <dd>Default model in <code>provider/model-id</code> format</dd>
               </div>
               <div>
-                <dt>provider</dt>
-                <dd>Provider definitions with name, npm package, and env vars for API keys</dd>
+                <dt>provider.*.npm</dt>
+                <dd>AI SDK npm package (e.g. <code>@ai-sdk/openai-compatible</code>)</dd>
               </div>
               <div>
-                <dt>models.*.name</dt>
+                <dt>provider.*.name</dt>
+                <dd>Display name for the provider</dd>
+              </div>
+              <div>
+                <dt>provider.*.options.baseURL</dt>
+                <dd>API endpoint URL for the provider</dd>
+              </div>
+              <div>
+                <dt>provider.*.options.apiKey</dt>
+                <dd>API key, supports <code>{'{env:VAR_NAME}'}</code> syntax</dd>
+              </div>
+              <div>
+                <dt>provider.*.models.*.name</dt>
                 <dd>Human-readable display name for the model</dd>
               </div>
               <div>
-                <dt>models.*.tool_call</dt>
-                <dd>Whether the model supports function/tool calling (derived from supported_parameters)</dd>
-              </div>
-              <div>
-                <dt>models.*.temperature</dt>
-                <dd>Whether temperature parameter is supported</dd>
-              </div>
-              <div>
-                <dt>models.*.limit.context</dt>
+                <dt>provider.*.models.*.limit.context</dt>
                 <dd>Maximum input context window in tokens</dd>
               </div>
               <div>
-                <dt>models.*.limit.output</dt>
+                <dt>provider.*.models.*.limit.output</dt>
                 <dd>Maximum output/completion tokens</dd>
               </div>
             </dl>

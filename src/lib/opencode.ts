@@ -1,64 +1,75 @@
 import type { DerivedModel } from '../types/explorer'
 
-export type OpencodeModelConfig = {
+export type OpencodeModelEntry = {
   name: string
-  tool_call: boolean
-  temperature: boolean
-  limit: {
-    context: number
-    output: number
+  limit?: {
+    context?: number
+    output?: number
   }
+}
+
+export type OpencodeProviderConfig = {
+  npm: string
+  name: string
+  options: {
+    baseURL: string
+    apiKey: string
+  }
+  models: Record<string, OpencodeModelEntry>
 }
 
 export type OpencodeConfig = {
   $schema: string
-  disabled_providers: string[]
+  model?: string
   provider: {
-    openrouter: {
-      name: string
-      npm: string
-      env: string[]
-    }
+    openrouter: OpencodeProviderConfig
   }
-  models: Record<string, OpencodeModelConfig>
 }
 
-export function modelToOpencodeEntry(model: DerivedModel): OpencodeModelConfig {
-  const hasToolCall = model.supportedParameters.some(
-    (p) => p === 'tools' || p === 'tool_choice',
-  )
-  const hasTemperature = model.supportedParameters.includes('temperature')
-
-  return {
+function modelToOpencodeEntry(model: DerivedModel): OpencodeModelEntry {
+  const entry: OpencodeModelEntry = {
     name: model.name,
-    tool_call: hasToolCall,
-    temperature: hasTemperature,
-    limit: {
-      context: model.contextLength ?? 0,
-      output: model.maxCompletionTokens ?? 0,
-    },
   }
+
+  const context = model.contextLength ?? 0
+  const output = model.maxCompletionTokens ?? 0
+
+  if (context > 0 || output > 0) {
+    entry.limit = {}
+    if (context > 0) entry.limit.context = context
+    if (output > 0) entry.limit.output = output
+  }
+
+  return entry
 }
 
 export function generateOpencodeConfig(models: DerivedModel[]): OpencodeConfig {
-  const entries: Record<string, OpencodeModelConfig> = {}
+  const modelEntries: Record<string, OpencodeModelEntry> = {}
 
   for (const model of models) {
-    entries[model.id] = modelToOpencodeEntry(model)
+    modelEntries[model.id] = modelToOpencodeEntry(model)
   }
 
-  return {
+  const config: OpencodeConfig = {
     $schema: 'https://opencode.ai/config.json',
-    disabled_providers: [],
     provider: {
       openrouter: {
-        name: 'OpenRouter',
         npm: '@ai-sdk/openai-compatible',
-        env: ['OPENROUTER_API_KEY'],
+        name: 'OpenRouter',
+        options: {
+          baseURL: 'https://openrouter.ai/api/v1',
+          apiKey: '{env:OPENROUTER_API_KEY}',
+        },
+        models: modelEntries,
       },
     },
-    models: entries,
   }
+
+  if (models.length > 0) {
+    config.model = `openrouter/${models[0].id}`
+  }
+
+  return config
 }
 
 export function formatModelConfigSnippet(model: DerivedModel): string {
@@ -70,20 +81,3 @@ export function formatModelConfigSnippet(model: DerivedModel): string {
 export function formatFullConfig(models: DerivedModel[]): string {
   return JSON.stringify(generateOpencodeConfig(models), null, 2)
 }
-
-/**
- * OpenCode config schema explanation for new users:
- *
- * $schema        - Points to the JSON schema for validation/autocomplete
- * disabled_providers - Array of provider IDs to skip (empty = all enabled)
- * provider       - Provider definitions, each with:
- *   name         - Display name
- *   npm          - The npm package that implements the AI SDK provider
- *   env          - Environment variable names for API keys
- * models         - Model entries keyed by provider-prefixed model ID:
- *   name         - Human-readable model name
- *   tool_call    - Whether the model supports function/tool calling
- *   temperature  - Whether the model supports temperature parameter
- *   limit.context - Max input context window in tokens
- *   limit.output  - Max output/completion tokens
- */
