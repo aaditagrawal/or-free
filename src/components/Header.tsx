@@ -17,7 +17,6 @@ export function Header({
   totalCount,
   visibleCount,
   freeCount,
-  providerMode,
   pricingFilter,
   lastUpdatedText,
   onRefresh,
@@ -26,67 +25,55 @@ export function Header({
   onNavigateConfig,
 }: HeaderProps) {
   return (
-    <>
-      <header className="header-shell">
-        <h1>OpenRouter Explorer</h1>
-        <p className="lede">
-          Search for OR models, especially free ones (hehe).
-        </p>
-      </header>
-
-      <div className="stats-strip" aria-label="Overview stats">
-        <div className="stats-values">
-          <div className="stat-item">
-            <span>Total</span>
-            <strong>{totalCount}</strong>
-          </div>
-          <div className="stat-item">
-            <span>Free + active</span>
-            <strong>{freeCount}</strong>
-          </div>
-          <div className="stat-item">
-            <span>Visible</span>
-            <strong>{visibleCount}</strong>
-          </div>
-          <div className="stat-item">
-            <span>Pricing</span>
-            <strong>{pricingFilter === "free" ? "Free only" : "All"}</strong>
-          </div>
-          <div className="stat-item">
-            <span>Mode</span>
-            <strong>
-              {providerMode === "include_incomplete" ? "Incomplete" : "Strict"}
-            </strong>
-          </div>
-          <div className="stat-item">
-            <span>Updated</span>
-            <strong>{lastUpdatedText}</strong>
-          </div>
-        </div>
-        <div className="stats-actions">
-          <button
-            type="button"
-            onClick={onNavigateConfig}
-            className="button button-small button-accent"
-          >
-            Config Gen
-          </button>
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className="button button-small"
-          >
-            {theme === "dark" ? "Light" : "Dark"}
-          </button>
-          <button
-            type="button"
-            onClick={onRefresh}
-            className="button button-small"
-          >
-            Refresh
-          </button>
-        </div>
+    <header className="topbar" aria-label="Top bar">
+      <div className="topbar-brand">
+        or·free
+        <span>openrouter model explorer</span>
       </div>
-    </>
+
+      <div className="topbar-meta" role="status">
+        <span className="topbar-meta-item">
+          <span className="topbar-pulse" aria-hidden />
+          <span>synced {lastUpdatedText}</span>
+        </span>
+        <span className="topbar-meta-item">
+          total <strong>{totalCount}</strong>
+        </span>
+        <span className="topbar-meta-item">
+          free <strong>{freeCount}</strong>
+        </span>
+        <span className="topbar-meta-item">
+          shown <strong>{visibleCount}</strong>
+        </span>
+        <span className="topbar-meta-item">
+          {pricingFilter === "free" ? "free only" : "all pricing"}
+        </span>
+      </div>
+
+      <div className="topbar-actions">
+        <button
+          type="button"
+          onClick={onNavigateConfig}
+          className="button button-small button-accent"
+        >
+          Config
+        </button>
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="button button-small"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? "Light" : "Dark"}
+        </button>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="button button-small"
+        >
+          Refresh
+        </button>
+      </div>
+    </header>
   );
 }

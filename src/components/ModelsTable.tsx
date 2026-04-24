@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Fragment, useCallback, useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState, type ReactElement } from 'react'
 import type { DerivedModel, PricingFilter, ProviderMode, SortDirection, SortKey } from '../types/explorer'
 import { ModelRowExpanded } from './ModelRowExpanded'
 
@@ -15,27 +15,20 @@ type ModelsTableProps = {
 const SORTABLE_HEADERS: Array<{ key: SortKey; label: string }> = [
   { key: 'name', label: 'Model' },
   { key: 'context', label: 'Context' },
-  { key: 'max_completion', label: 'Max output' },
-  { key: 'expiration', label: 'Expiration' },
+  { key: 'max_completion', label: 'Max out' },
+  { key: 'expiration', label: 'Expires' },
 ]
 
-function formatNumber(value: number | null): string {
-  if (value == null || Number.isNaN(value)) {
-    return 'n/a'
-  }
-
-  return Intl.NumberFormat().format(value)
+function formatCompact(value: number | null): string {
+  if (value == null || Number.isNaN(value)) return '—'
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `${Math.round(value / 1_000)}K`
+  return String(value)
 }
 
 function getNextSortDirection(key: SortKey, activeSortKey: SortKey, activeDirection: SortDirection) {
-  if (key === activeSortKey) {
-    return activeDirection === 'asc' ? 'desc' : 'asc'
-  }
-
-  if (key === 'id' || key === 'name' || key === 'prompt_price') {
-    return 'asc'
-  }
-
+  if (key === activeSortKey) return activeDirection === 'asc' ? 'desc' : 'asc'
+  if (key === 'id' || key === 'name' || key === 'prompt_price') return 'asc'
   return 'desc'
 }
 
@@ -44,7 +37,7 @@ function getRowId(id: string) {
 }
 
 function formatPrice(price: number): string {
-  if (price === 0) return 'Free'
+  if (price === 0) return 'free'
   const perMillion = price * 1_000_000
   return `$${perMillion.toFixed(2)}/M`
 }
@@ -75,6 +68,71 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+const MODALITY_ICON: Record<string, ReactElement> = {
+  // Paragraph lines — the universal "text" glyph, not a letterform
+  text: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <path d="M3 5h10" />
+      <path d="M3 8h10" />
+      <path d="M3 11h6" />
+    </svg>
+  ),
+  image: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.6" y="3.2" width="10.8" height="9.6" rx="1" />
+      <circle cx="6" cy="6.6" r="0.9" />
+      <path d="M3 11.2l3.2-3 2.4 2.2 1.8-1.5 2.6 2.3" />
+    </svg>
+  ),
+  audio: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 6v4" />
+      <path d="M6 4v8" />
+      <path d="M8.5 5.5v5" />
+      <path d="M11 3v10" />
+      <path d="M13 6.5v3" />
+    </svg>
+  ),
+  video: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="9" height="8" rx="1" />
+      <path d="M11 7l3-1.5v5L11 9z" />
+    </svg>
+  ),
+  file: (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5h-7.5a.5.5 0 0 1-.5-.5v-10.5a.5.5 0 0 1 .5-.5z" />
+      <path d="M9 2.5v3h3" />
+    </svg>
+  ),
+}
+
+function ModalityDots({ modalities }: { modalities: string[] }) {
+  if (modalities.length === 0) return <span className="dim">—</span>
+  return (
+    <span className="modality-row">
+      {modalities.map((m) => {
+        const kind = m.toLowerCase()
+        const icon = MODALITY_ICON[kind] ?? (
+          <span aria-hidden className="modality-letter">{m.slice(0, 1).toUpperCase()}</span>
+        )
+        return (
+          <span
+            key={m}
+            className="modality-dot"
+            data-kind={kind}
+            data-tip={m}
+            role="img"
+            aria-label={m}
+          >
+            {icon}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
+
 export function ModelsTable({
   models,
   providerMode,
@@ -87,14 +145,19 @@ export function ModelsTable({
 
   const rows = useMemo(() => models, [models])
 
+  const contextMax = useMemo(() => {
+    let max = 0
+    for (const model of models) {
+      if (model.contextLength && model.contextLength > max) max = model.contextLength
+    }
+    return max || 1
+  }, [models])
+
   const toggleRow = (id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -105,14 +168,19 @@ export function ModelsTable({
         <table>
           <thead>
             <tr>
-              <th>Row</th>
+              <th style={{ width: 72 }}>Row</th>
               {SORTABLE_HEADERS.map((header) => {
                 const active = header.key === sortKey
+                const direction = active ? sortDirection : null
                 return (
-                  <th key={header.key}>
+                  <th key={header.key} className={header.key === 'context' || header.key === 'max_completion' ? 'num' : undefined}>
                     <button
                       type="button"
-                      className={clsx('sort-button', active && 'sort-active')}
+                      className={clsx(
+                        'sort-button',
+                        active && 'sort-active',
+                        active && (direction === 'asc' ? 'sort-asc' : 'sort-desc'),
+                      )}
                       onClick={() =>
                         onSortChange(
                           header.key,
@@ -121,16 +189,19 @@ export function ModelsTable({
                       }
                     >
                       {header.label}
-                      {active ? (sortDirection === 'asc' ? ' [asc]' : ' [desc]') : ''}
                     </button>
                   </th>
                 )
               })}
               {pricingFilter === 'all' ? (
-                <th>
+                <th className="num">
                   <button
                     type="button"
-                    className={clsx('sort-button', sortKey === 'prompt_price' && 'sort-active')}
+                    className={clsx(
+                      'sort-button',
+                      sortKey === 'prompt_price' && 'sort-active',
+                      sortKey === 'prompt_price' && (sortDirection === 'asc' ? 'sort-asc' : 'sort-desc'),
+                    )}
                     onClick={() =>
                       onSortChange(
                         'prompt_price',
@@ -139,11 +210,11 @@ export function ModelsTable({
                     }
                   >
                     Pricing
-                    {sortKey === 'prompt_price' ? (sortDirection === 'asc' ? ' [asc]' : ' [desc]') : ''}
                   </button>
                 </th>
               ) : null}
-              <th>Status</th>
+              <th>Modalities</th>
+              <th>Moderation</th>
             </tr>
           </thead>
           <tbody>
@@ -152,6 +223,7 @@ export function ModelsTable({
               const showIncompleteWarning = providerMode === 'include_incomplete' && !model.isProviderReady
               const isPaid = !model.isFree
               const rowId = getRowId(model.id)
+              const ctxPct = model.contextLength ? Math.max(2, (model.contextLength / contextMax) * 100) : 0
 
               return (
                 <Fragment key={model.id}>
@@ -164,7 +236,7 @@ export function ModelsTable({
                         aria-expanded={isOpen}
                         aria-controls={rowId}
                       >
-                        {isOpen ? 'Hide' : 'Details'}
+                        {isOpen ? '− Hide' : '+ Details'}
                       </button>
                     </td>
                     <td className="td-model">
@@ -174,38 +246,56 @@ export function ModelsTable({
                           {model.id}
                           <CopyButton text={model.id} />
                         </span>
+                        {(showIncompleteWarning || isPaid) ? (
+                          <span className="badges-row">
+                            {showIncompleteWarning ? (
+                              <span
+                                className="badge badge-warning"
+                                title="Upstream provider metadata is missing context_length for this model"
+                              >
+                                incomplete provider limits
+                              </span>
+                            ) : null}
+                            {isPaid ? <span className="badge badge-paid">paid</span> : null}
+                          </span>
+                        ) : null}
                       </div>
-                      {showIncompleteWarning ? (
-                        <span className="badge badge-warning">
-                          INCOMPLETE PROVIDER LIMITS
-                          <span className="info-icon" data-tooltip="This model is missing a listed context_length or max_completion_tokens in its upstream provider metadata">i</span>
-                        </span>
-                      ) : null}
-                      {isPaid ? (
-                        <span className="badge badge-paid">PAID</span>
-                      ) : null}
                     </td>
-                    <td data-label="Context">{formatNumber(model.contextLength)}</td>
-                    <td data-label="Max output">{formatNumber(model.maxCompletionTokens)}</td>
-                    <td data-label="Expiration">{model.expirationDate ?? 'none'}</td>
+                    <td data-label="Context" className="num">
+                      <div className="ctxbar">
+                        <span className="ctxbar-track" aria-hidden>
+                          <span
+                            className="ctxbar-fill"
+                            style={{ ['--w' as string]: `${ctxPct}%` }}
+                          />
+                        </span>
+                        <span className="ctxbar-value">{formatCompact(model.contextLength)}</span>
+                      </div>
+                    </td>
+                    <td data-label="Max out" className="num">{formatCompact(model.maxCompletionTokens)}</td>
+                    <td data-label="Expires" className={model.expirationDate ? 'num' : 'num dim'}>
+                      {model.expirationDate ?? '—'}
+                    </td>
                     {pricingFilter === 'all' ? (
-                      <td data-label="Pricing">
+                      <td data-label="Pricing" className="num">
                         <div className="pricing-cell">
-                          <span>In: {formatPrice(model.promptPrice)}</span>
-                          <span>Out: {formatPrice(model.completionPrice)}</span>
+                          <span>{formatPrice(model.promptPrice)}</span>
+                          <span>↳ {formatPrice(model.completionPrice)}</span>
                         </div>
                       </td>
                     ) : null}
-                    <td data-label="Status">
-                      <div className="status-cell">
-                        <span>{model.moderated ? 'Moderated' : 'Unmoderated'}</span>
-                        <span>{model.inputModalities.join(', ') || 'n/a'}</span>
-                      </div>
+                    <td data-label="Modalities">
+                      <ModalityDots modalities={model.inputModalities} />
+                    </td>
+                    <td data-label="Moderation">
+                      <span className={clsx('status-pill', model.moderated && 'on')}>
+                        {model.moderated ? 'moderated' : 'open'}
+                      </span>
                     </td>
                   </tr>
                   {isOpen ? (
                     <tr id={rowId} className="row-expanded">
-                      <td colSpan={pricingFilter === 'all' ? 7 : 6}>
+                      <td colSpan={pricingFilter === 'all' ? 8 : 7}>
                         <ModelRowExpanded
                           model={model}
                           showIncompleteWarning={showIncompleteWarning}

@@ -4,6 +4,7 @@ import { ConfigGenerator } from './components/ConfigGenerator'
 import { EmptyState } from './components/EmptyState'
 import { ErrorState } from './components/ErrorState'
 import { Header } from './components/Header'
+import { MetricsStrip } from './components/MetricsStrip'
 import { ModelsTable } from './components/ModelsTable'
 import { Toolbar } from './components/Toolbar'
 import { useHashRouter } from './hooks/useHashRouter'
@@ -117,6 +118,8 @@ function App() {
           onToggleTheme={toggleTheme}
           onNavigateConfig={() => navigate('config')}
         />
+
+        <MetricsStrip derivedAll={derived} visible={filteredModels} />
 
         <Toolbar
           state={state}

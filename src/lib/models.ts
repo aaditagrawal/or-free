@@ -50,7 +50,10 @@ export function isUnexpired(model: OpenRouterModel, todayUtc = getUtcDateStamp()
 export function isProviderReady(model: OpenRouterModel): boolean {
   const provider = model.top_provider ?? {}
 
-  return provider.context_length != null && provider.max_completion_tokens != null
+  // Context length is the load-bearing field. max_completion_tokens is nice
+  // to have but many upstream providers omit it; don't penalize the model
+  // for that alone.
+  return provider.context_length != null
 }
 
 export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStamp()): DerivedModel {
