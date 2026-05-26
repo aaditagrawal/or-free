@@ -108,15 +108,19 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           <div>
             <dt>Provider</dt>
             <dd className={model.providerId ? undefined : 'dd-dim'}>
-              {model.providerLogoUrl && model.providerId ? (
-                <span className="provider-detail">
-                  <ProviderLogo
-                    providerId={model.providerId}
-                    providerLogoUrl={model.providerLogoUrl}
-                    small
-                  />
-                  {model.providerId}
-                </span>
+              {model.providerId ? (
+                model.providerLogoUrl ? (
+                  <span className="provider-detail">
+                    <ProviderLogo
+                      providerId={model.providerId}
+                      providerLogoUrl={model.providerLogoUrl}
+                      small
+                    />
+                    {model.providerId}
+                  </span>
+                ) : (
+                  <span className="provider-detail">{model.providerId}</span>
+                )
               ) : (
                 'n/a'
               )}

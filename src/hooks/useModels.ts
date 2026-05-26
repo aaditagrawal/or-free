@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   fetchModelsDev,
   fetchOpenRouterModels,
@@ -48,6 +48,13 @@ function readCache<TPayload>(
     if (!raw) return null
     const parsed = JSON.parse(raw) as Cached<unknown>
     if (!hasPayload(parsed?.payload)) return null
+    if (
+      typeof parsed.savedAt !== 'number' ||
+      !Number.isFinite(parsed.savedAt) ||
+      parsed.savedAt < 0
+    ) {
+      return null
+    }
     if (Date.now() - parsed.savedAt > CACHE_MAX_AGE_MS) return null
     return { payload: parsed.payload, savedAt: parsed.savedAt }
   } catch {
@@ -91,9 +98,15 @@ async function fetchAndCacheModelsDev(signal?: AbortSignal) {
 // capability metadata. Either OR or ORCA arriving is enough to render the UI;
 // the other sources merge in progressively when they land.
 export function useModels() {
-  const orInitial = readCache('or', hasOpenRouterModelsResponse)
-  const orcaInitial = readCache('orca', hasOpenRouterModelsResponse)
-  const modelsDevInitial = readCache('models-dev', hasModelsDevResponse)
+  const [initialCaches] = useState(() => ({
+    or: readCache('or', hasOpenRouterModelsResponse),
+    orca: readCache('orca', hasOpenRouterModelsResponse),
+    modelsDev: readCache('models-dev', hasModelsDevResponse),
+  }))
+
+  const orInitial = initialCaches.or
+  const orcaInitial = initialCaches.orca
+  const modelsDevInitial = initialCaches.modelsDev
 
   const orQuery = useQuery({
     queryKey: ['models', 'or'],

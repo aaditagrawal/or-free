@@ -28,12 +28,11 @@ function renderWithQueryClient(ui: ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>,
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
+
+  return render(ui, { wrapper })
 }
 
 function buildModel(overrides: Partial<OpenRouterModel>): OpenRouterModel {
@@ -98,16 +97,14 @@ describe('ModelsTable', () => {
     expect(screen.queryByText(/INCOMPLETE PROVIDER LIMITS/i)).toBeNull()
 
     rerender(
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-        <ModelsTable
-          models={[model]}
-          providerMode="include_incomplete"
-          pricingFilter="free"
-          sortKey="created"
-          sortDirection="desc"
-          onSortChange={vi.fn()}
-        />
-      </QueryClientProvider>,
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
     )
 
     expect(screen.getByText(/INCOMPLETE PROVIDER LIMITS/i)).not.toBeNull()
