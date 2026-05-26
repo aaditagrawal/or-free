@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { Fragment, useCallback, useMemo, useState, type ReactElement } from 'react'
 import type { DerivedModel, PricingFilter, ProviderMode, SortDirection, SortKey } from '../types/explorer'
 import { ModelRowExpanded } from './ModelRowExpanded'
+import { ProviderLogo } from './ProviderLogo'
 
 type ModelsTableProps = {
   models: DerivedModel[]
@@ -240,25 +241,28 @@ export function ModelsTable({
                       </button>
                     </td>
                     <td className="td-model">
-                      <div className="model-name-cell">
-                        <strong>{model.name}</strong>
-                        <span className="model-id-row">
-                          {model.id}
-                          <CopyButton text={model.id} />
-                        </span>
-                        {(showIncompleteWarning || isPaid) ? (
-                          <span className="badges-row">
-                            {showIncompleteWarning ? (
-                              <span
-                                className="badge badge-warning"
-                                title="Upstream provider metadata is missing context_length for this model"
-                              >
-                                incomplete provider limits
-                              </span>
-                            ) : null}
-                            {isPaid ? <span className="badge badge-paid">paid</span> : null}
+                      <div className="model-title-row">
+                        <ProviderLogo providerId={model.providerId} providerLogoUrl={model.providerLogoUrl} />
+                        <div className="model-name-cell">
+                          <strong>{model.name}</strong>
+                          <span className="model-id-row">
+                            {model.id}
+                            <CopyButton text={model.id} />
                           </span>
-                        ) : null}
+                          {(showIncompleteWarning || isPaid) ? (
+                            <span className="badges-row">
+                              {showIncompleteWarning ? (
+                                <span
+                                  className="badge badge-warning"
+                                  title="Upstream provider metadata is missing context_length for this model"
+                                >
+                                  incomplete provider limits
+                                </span>
+                              ) : null}
+                              {isPaid ? <span className="badge badge-paid">paid</span> : null}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </td>
                     <td data-label="Context" className="num">

@@ -2,6 +2,7 @@ import type { DerivedModel, PricingFilter, ProviderMode } from '../types/explore
 import type { OpenRouterModel } from '../types/openrouter'
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000
+export const MODELS_DEV_LOGO_BASE_URL = 'https://models.dev/logos'
 
 export function toNumber(value: unknown): number {
   if (typeof value === 'number') {
@@ -34,6 +35,20 @@ function unixToMs(unixMaybeSeconds: number): number {
   return unixMaybeSeconds > 1e12 ? unixMaybeSeconds : unixMaybeSeconds * 1000
 }
 
+export function getProviderId(modelId: string): string | null {
+  const providerId = modelId.split('/')[0]?.replace(/^~+/, '').trim()
+
+  return providerId ? providerId : null
+}
+
+export function getProviderLogoUrl(providerId: string | null): string | null {
+  if (!providerId) {
+    return null
+  }
+
+  return `${MODELS_DEV_LOGO_BASE_URL}/${encodeURIComponent(providerId)}.svg`
+}
+
 export function isFree(model: OpenRouterModel): boolean {
   return toNumber(model.pricing.prompt) === 0 && toNumber(model.pricing.completion) === 0
 }
@@ -63,11 +78,14 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
     model.top_provider?.max_completion_tokens == null
       ? null
       : toNumber(model.top_provider.max_completion_tokens)
+  const providerId = getProviderId(model.id)
 
   return {
     raw: model,
     id: model.id,
     canonicalSlug: model.canonical_slug,
+    providerId,
+    providerLogoUrl: getProviderLogoUrl(providerId),
     name: model.name,
     description: model.description ?? '',
     createdMs,
@@ -84,6 +102,16 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
     modality: model.architecture.modality ?? null,
     inputModalities: model.architecture.input_modalities ?? [],
     outputModalities: model.architecture.output_modalities ?? [],
+    family: model.models_dev?.family ?? null,
+    knowledge: model.models_dev?.knowledge ?? null,
+    releaseDate: model.models_dev?.release_date ?? null,
+    lastUpdated: model.models_dev?.last_updated ?? null,
+    attachment: model.models_dev?.attachment ?? null,
+    reasoning: model.models_dev?.reasoning ?? null,
+    toolCall: model.models_dev?.tool_call ?? null,
+    structuredOutput: model.models_dev?.structured_output ?? null,
+    temperature: model.models_dev?.temperature ?? null,
+    openWeights: model.models_dev?.open_weights ?? null,
     supportedParameters: model.supported_parameters ?? [],
     expirationDate: model.expiration_date ?? null,
     moderated: Boolean(model.top_provider?.is_moderated),

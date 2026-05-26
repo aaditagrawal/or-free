@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { DerivedModel } from '../types/explorer'
 import type { OpenRouterPricing } from '../types/openrouter'
 import { formatModelConfigSnippet } from '../lib/opencode'
+import { ProviderLogo } from './ProviderLogo'
 
 type ModelRowExpandedProps = {
   model: DerivedModel
@@ -26,6 +27,14 @@ function formatDate(iso: string): string {
   } catch {
     return iso
   }
+}
+
+function formatBoolean(value: boolean | null): string {
+  if (value == null) {
+    return 'n/a'
+  }
+
+  return value ? 'Yes' : 'No'
 }
 
 function formatJson(model: DerivedModel): string {
@@ -95,6 +104,23 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           <div>
             <dt>Name</dt>
             <dd>{model.name}</dd>
+          </div>
+          <div>
+            <dt>Provider</dt>
+            <dd className={model.providerId ? undefined : 'dd-dim'}>
+              {model.providerLogoUrl && model.providerId ? (
+                <span className="provider-detail">
+                  <ProviderLogo
+                    providerId={model.providerId}
+                    providerLogoUrl={model.providerLogoUrl}
+                    small
+                  />
+                  {model.providerId}
+                </span>
+              ) : (
+                'n/a'
+              )}
+            </dd>
           </div>
           <div>
             <dt>Hugging Face ID</dt>
@@ -205,6 +231,46 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           <div>
             <dt>Supported parameters</dt>
             <dd>{model.supportedParameters.join(', ') || 'n/a'}</dd>
+          </div>
+          <div>
+            <dt>Family</dt>
+            <dd className={model.family ? undefined : 'dd-dim'}>{model.family ?? 'n/a'}</dd>
+          </div>
+          <div>
+            <dt>Knowledge cutoff</dt>
+            <dd className={model.knowledge ? undefined : 'dd-dim'}>{model.knowledge ?? 'n/a'}</dd>
+          </div>
+          <div>
+            <dt>Release date</dt>
+            <dd className={model.releaseDate ? undefined : 'dd-dim'}>{model.releaseDate ?? 'n/a'}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd className={model.lastUpdated ? undefined : 'dd-dim'}>{model.lastUpdated ?? 'n/a'}</dd>
+          </div>
+          <div>
+            <dt>Attachments</dt>
+            <dd className={model.attachment == null ? 'dd-dim' : undefined}>{formatBoolean(model.attachment)}</dd>
+          </div>
+          <div>
+            <dt>Reasoning</dt>
+            <dd className={model.reasoning == null ? 'dd-dim' : undefined}>{formatBoolean(model.reasoning)}</dd>
+          </div>
+          <div>
+            <dt>Tool calls</dt>
+            <dd className={model.toolCall == null ? 'dd-dim' : undefined}>{formatBoolean(model.toolCall)}</dd>
+          </div>
+          <div>
+            <dt>Structured output</dt>
+            <dd className={model.structuredOutput == null ? 'dd-dim' : undefined}>{formatBoolean(model.structuredOutput)}</dd>
+          </div>
+          <div>
+            <dt>Temperature</dt>
+            <dd className={model.temperature == null ? 'dd-dim' : undefined}>{formatBoolean(model.temperature)}</dd>
+          </div>
+          <div>
+            <dt>Open weights</dt>
+            <dd className={model.openWeights == null ? 'dd-dim' : undefined}>{formatBoolean(model.openWeights)}</dd>
           </div>
         </dl>
       </div>
