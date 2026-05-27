@@ -1,59 +1,116 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
+  fetchModelsDev,
   fetchOpenRouterModels,
   fetchOrcaModels,
   mergeModelSources,
 } from '../lib/openrouter'
-import type { OpenRouterModelsResponse } from '../types/openrouter'
+import type { ModelsDevResponse, OpenRouterModelsResponse } from '../types/openrouter'
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
-type Cached = { payload: OpenRouterModelsResponse; savedAt: number }
+type Source = 'or' | 'orca' | 'models-dev'
+type Cached<TPayload> = { payload: TPayload; savedAt: number }
 
-function cacheKey(source: 'or' | 'orca') {
+function cacheKey(source: Source) {
   return `or-free:models-cache:${source}:v1`
 }
 
-function readCache(source: 'or' | 'orca'): Cached | null {
+function hasOpenRouterModelsResponse(value: unknown): value is OpenRouterModelsResponse {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'data' in value &&
+      Array.isArray(value.data),
+  )
+}
+
+function hasModelsDevResponse(value: unknown): value is ModelsDevResponse {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'openrouter' in value &&
+      value.openrouter &&
+      typeof value.openrouter === 'object' &&
+      'models' in value.openrouter,
+  )
+}
+
+function readCache<TPayload>(
+  source: Source,
+  hasPayload: (value: unknown) => value is TPayload,
+): Cached<TPayload> | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = window.localStorage.getItem(cacheKey(source))
     if (!raw) return null
-    const parsed = JSON.parse(raw) as Cached
-    if (!parsed?.payload || !Array.isArray(parsed.payload.data)) return null
+    const parsed = JSON.parse(raw) as Cached<unknown>
+    if (!hasPayload(parsed?.payload)) return null
+    if (
+      typeof parsed.savedAt !== 'number' ||
+      !Number.isFinite(parsed.savedAt) ||
+      parsed.savedAt < 0
+    ) {
+      return null
+    }
     if (Date.now() - parsed.savedAt > CACHE_MAX_AGE_MS) return null
-    return parsed
+    return { payload: parsed.payload, savedAt: parsed.savedAt }
   } catch {
     return null
   }
 }
 
-function writeCache(source: 'or' | 'orca', payload: OpenRouterModelsResponse): void {
+function writeCache<TPayload>(source: Source, payload: TPayload): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(
       cacheKey(source),
-      JSON.stringify({ payload, savedAt: Date.now() } satisfies Cached),
+      JSON.stringify({ payload, savedAt: Date.now() } satisfies Cached<TPayload>),
     )
   } catch {
     // quota or disabled storage — silently ignore
   }
 }
 
-// Runs the two sources in parallel. OR is the fast primary (~120ms, has
-// expiration_date/description/etc). ORCA is the secondary (~500ms, fills
-// in any models OR doesn't list). Merged output prefers OR per model id.
-// Either source arriving is enough to render the UI; the other merges in
-// progressively when it lands.
+async function fetchAndCacheOpenRouter(signal?: AbortSignal) {
+  const payload = await fetchOpenRouterModels(signal)
+  writeCache('or', payload)
+  return payload
+}
+
+async function fetchAndCacheOrca(signal?: AbortSignal) {
+  const payload = await fetchOrcaModels(signal)
+  writeCache('orca', payload)
+  return payload
+}
+
+async function fetchAndCacheModelsDev(signal?: AbortSignal) {
+  const payload = await fetchModelsDev(signal)
+  writeCache('models-dev', payload)
+  return payload
+}
+
+// Runs the sources in parallel. OR is the fast primary (~120ms, has
+// expiration_date/description/etc). ORCA fills in any models OR doesn't list.
+// models.dev enriches matching OpenRouter IDs with modalities, limits, and
+// capability metadata. Either OR or ORCA arriving is enough to render the UI;
+// the other sources merge in progressively when they land.
 export function useModels() {
-  const orInitial = readCache('or')
-  const orcaInitial = readCache('orca')
+  const [initialCaches] = useState(() => ({
+    or: readCache('or', hasOpenRouterModelsResponse),
+    orca: readCache('orca', hasOpenRouterModelsResponse),
+    modelsDev: readCache('models-dev', hasModelsDevResponse),
+  }))
+
+  const orInitial = initialCaches.or
+  const orcaInitial = initialCaches.orca
+  const modelsDevInitial = initialCaches.modelsDev
 
   const orQuery = useQuery({
     queryKey: ['models', 'or'],
-    queryFn: ({ signal }) => fetchOpenRouterModels(signal),
+    queryFn: ({ signal }) => fetchAndCacheOpenRouter(signal),
     staleTime: REFRESH_INTERVAL_MS,
     refetchInterval: REFRESH_INTERVAL_MS,
     refetchOnWindowFocus: false,
@@ -63,7 +120,7 @@ export function useModels() {
 
   const orcaQuery = useQuery({
     queryKey: ['models', 'orca'],
-    queryFn: ({ signal }) => fetchOrcaModels(signal),
+    queryFn: ({ signal }) => fetchAndCacheOrca(signal),
     staleTime: REFRESH_INTERVAL_MS,
     refetchInterval: REFRESH_INTERVAL_MS,
     refetchOnWindowFocus: false,
@@ -71,17 +128,19 @@ export function useModels() {
     initialDataUpdatedAt: orcaInitial?.savedAt,
   })
 
-  useEffect(() => {
-    if (orQuery.data && orQuery.isSuccess) writeCache('or', orQuery.data)
-  }, [orQuery.data, orQuery.isSuccess])
-
-  useEffect(() => {
-    if (orcaQuery.data && orcaQuery.isSuccess) writeCache('orca', orcaQuery.data)
-  }, [orcaQuery.data, orcaQuery.isSuccess])
+  const modelsDevQuery = useQuery({
+    queryKey: ['models', 'models-dev'],
+    queryFn: ({ signal }) => fetchAndCacheModelsDev(signal),
+    staleTime: REFRESH_INTERVAL_MS,
+    refetchInterval: REFRESH_INTERVAL_MS,
+    refetchOnWindowFocus: false,
+    initialData: modelsDevInitial?.payload,
+    initialDataUpdatedAt: modelsDevInitial?.savedAt,
+  })
 
   const merged = useMemo(
-    () => mergeModelSources(orQuery.data, orcaQuery.data),
-    [orQuery.data, orcaQuery.data],
+    () => mergeModelSources(orQuery.data, orcaQuery.data, modelsDevQuery.data),
+    [orQuery.data, orcaQuery.data, modelsDevQuery.data],
   )
 
   // Render as soon as either source lands. Loading only while *both* pending.
@@ -91,7 +150,11 @@ export function useModels() {
   const isError = orQuery.isError && orcaQuery.isError
   const error = isError ? orQuery.error ?? orcaQuery.error : null
 
-  const dataUpdatedAt = Math.max(orQuery.dataUpdatedAt ?? 0, orcaQuery.dataUpdatedAt ?? 0)
+  const dataUpdatedAt = Math.max(
+    orQuery.dataUpdatedAt ?? 0,
+    orcaQuery.dataUpdatedAt ?? 0,
+    modelsDevQuery.dataUpdatedAt ?? 0,
+  )
 
   return {
     data: merged,
@@ -100,8 +163,12 @@ export function useModels() {
     error,
     dataUpdatedAt,
     refetch: async () => {
-      const [or, orca] = await Promise.all([orQuery.refetch(), orcaQuery.refetch()])
-      return { or, orca }
+      const [or, orca, modelsDev] = await Promise.all([
+        orQuery.refetch(),
+        orcaQuery.refetch(),
+        modelsDevQuery.refetch(),
+      ])
+      return { or, orca, modelsDev }
     },
   }
 }

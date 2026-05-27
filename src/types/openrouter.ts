@@ -42,6 +42,53 @@ export type OpenRouterDefaultParameters = {
   frequency_penalty?: number | null
 }
 
+export type ModelsDevModalities = {
+  input?: string[]
+  output?: string[]
+}
+
+export type ModelsDevLimit = {
+  context?: number | null
+  output?: number | null
+}
+
+export type ModelsDevCost = {
+  input?: number | null
+  output?: number | null
+  cache_read?: number | null
+  cache_write?: number | null
+}
+
+export type ModelsDevModel = {
+  id: string
+  name?: string
+  family?: string
+  attachment?: boolean
+  reasoning?: boolean
+  tool_call?: boolean
+  structured_output?: boolean
+  temperature?: boolean
+  knowledge?: string
+  release_date?: string
+  last_updated?: string
+  modalities?: ModelsDevModalities
+  open_weights?: boolean
+  limit?: ModelsDevLimit
+  cost?: ModelsDevCost
+}
+
+export type ModelsDevProvider = {
+  id: string
+  env?: string[]
+  npm?: string
+  api?: string
+  name?: string
+  doc?: string
+  models: Record<string, ModelsDevModel>
+}
+
+export type ModelsDevResponse = Record<string, ModelsDevProvider>
+
 export type OpenRouterModel = {
   id: string
   canonical_slug: string
@@ -57,6 +104,7 @@ export type OpenRouterModel = {
   supported_parameters: string[]
   default_parameters?: OpenRouterDefaultParameters
   expiration_date?: string | null
+  models_dev?: ModelsDevModel
 }
 
 export type OpenRouterModelsResponse = {

@@ -1,9 +1,39 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactElement } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OpenRouterModel } from '../types/openrouter'
 import { toDerivedModel } from '../lib/models'
 import { ModelsTable } from './ModelsTable'
+
+const logoSvg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M0 0h24v24H0z"/></svg>'
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () =>
+      new Response(logoSvg, {
+        headers: { 'Content-Type': 'image/svg+xml' },
+      }),
+    ),
+  )
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
+function renderWithQueryClient(ui: ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
+
+  return render(ui, { wrapper })
+}
 
 function buildModel(overrides: Partial<OpenRouterModel>): OpenRouterModel {
   return {
@@ -53,7 +83,7 @@ describe('ModelsTable', () => {
       '2026-02-09',
     )
 
-    const { rerender } = render(
+    const { rerender } = renderWithQueryClient(
       <ModelsTable
         models={[model]}
         providerMode="strict"
@@ -84,7 +114,7 @@ describe('ModelsTable', () => {
     const user = userEvent.setup()
     const model = toDerivedModel(buildModel({ id: 'expand-me' }), '2026-02-09')
 
-    render(
+    renderWithQueryClient(
       <ModelsTable
         models={[model]}
         providerMode="include_incomplete"
@@ -98,5 +128,29 @@ describe('ModelsTable', () => {
     await user.click(screen.getByRole('button', { name: /Details/i }))
 
     expect(screen.getByRole('button', { name: /Copy JSON/i })).not.toBeNull()
+  })
+
+  it('shows the provider logo for OpenRouter-style model ids', async () => {
+    const model = toDerivedModel(buildModel({ id: 'anthropic/claude-haiku' }), '2026-02-09')
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    )
+
+    const logo = screen.getByRole('img', { name: /anthropic provider logo/i })
+
+    expect(logo).not.toBeNull()
+    expect(fetch).toHaveBeenCalledWith(
+      'https://models.dev/logos/anthropic.svg',
+      expect.objectContaining({ headers: { Accept: 'image/svg+xml' } }),
+    )
+    await waitFor(() => expect(logo.querySelector('svg')).not.toBeNull())
   })
 })

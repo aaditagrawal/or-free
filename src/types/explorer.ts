@@ -38,6 +38,8 @@ export type DerivedModel = {
   raw: OpenRouterModel
   id: string
   canonicalSlug: string
+  providerId: string | null
+  providerLogoUrl: string | null
   name: string
   description: string
   createdMs: number
@@ -51,6 +53,16 @@ export type DerivedModel = {
   modality: string | null
   inputModalities: string[]
   outputModalities: string[]
+  family: string | null
+  knowledge: string | null
+  releaseDate: string | null
+  lastUpdated: string | null
+  attachment: boolean | null
+  reasoning: boolean | null
+  toolCall: boolean | null
+  structuredOutput: boolean | null
+  temperature: boolean | null
+  openWeights: boolean | null
   supportedParameters: string[]
   expirationDate: string | null
   moderated: boolean
