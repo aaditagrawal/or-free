@@ -1,90 +1,92 @@
-import { useMemo, useState, useEffect } from 'react'
-import { CommandPalette } from './components/CommandPalette'
-import { ConfigGenerator } from './components/ConfigGenerator'
-import { EmptyState } from './components/EmptyState'
-import { ErrorState } from './components/ErrorState'
-import { Header } from './components/Header'
-import { MetricsStrip } from './components/MetricsStrip'
-import { ModelsTable } from './components/ModelsTable'
-import { Toolbar } from './components/Toolbar'
-import { useHashRouter } from './hooks/useHashRouter'
-import { useModels } from './hooks/useModels'
-import { useTheme } from './hooks/useTheme'
-import { applyExplorerFilters } from './lib/filterSort'
-import { deriveModels, getFacets, getUtcDateStamp, selectActiveModels } from './lib/models'
-import { useExplorerState } from './state/useExplorerState'
+import { useMemo, useState, useEffect } from "react";
+import { CommandPalette } from "./components/CommandPalette";
+import { ConfigGenerator } from "./components/ConfigGenerator";
+import { EmptyState } from "./components/EmptyState";
+import { ErrorState } from "./components/ErrorState";
+import { Header } from "./components/Header";
+import { MetricsStrip } from "./components/MetricsStrip";
+import { ModelsTable } from "./components/ModelsTable";
+import { Toolbar } from "./components/Toolbar";
+import { useHashRouter } from "./hooks/useHashRouter";
+import { useModels } from "./hooks/useModels";
+import { useTheme } from "./hooks/useTheme";
+import { applyExplorerFilters } from "./lib/filterSort";
+import { deriveModels, getFacets, getUtcDateStamp, selectActiveModels } from "./lib/models";
+import { useExplorerState } from "./state/useExplorerState";
 
 function formatUpdatedAt(timestamp: number): string {
   if (!timestamp) {
-    return 'Not yet loaded'
+    return "Not yet loaded";
   }
 
-  const d = new Date(timestamp)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const d = new Date(timestamp);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function App() {
-  const todayUtc = getUtcDateStamp()
-  const { route, search, navigate } = useHashRouter()
-  const [isPaletteOpen, setPaletteOpen] = useState(false)
-  const [notice, setNotice] = useState<string | null>(null)
-  const { state, update, toggleListFilter, clearFilters, setProviderMode, setSort } = useExplorerState(search)
-  const { theme, toggleTheme } = useTheme()
+  const todayUtc = getUtcDateStamp();
+  const { route, search, navigate } = useHashRouter();
+  const [isPaletteOpen, setPaletteOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const { state, update, toggleListFilter, clearFilters, setProviderMode, setSort } =
+    useExplorerState(search);
+  const { theme, toggleTheme } = useTheme();
 
-  const modelsQuery = useModels()
-  const models = useMemo(() => modelsQuery.data?.data ?? [], [modelsQuery.data])
+  const modelsQuery = useModels();
+  const models = useMemo(() => modelsQuery.data?.data ?? [], [modelsQuery.data]);
 
-  const derived = useMemo(() => deriveModels(models, todayUtc), [models, todayUtc])
+  const derived = useMemo(() => deriveModels(models, todayUtc), [models, todayUtc]);
   const freeAndUnexpired = useMemo(
     () => derived.filter((model) => model.isFree && model.isUnexpired),
     [derived],
-  )
+  );
 
   const activeModels = useMemo(
     () => selectActiveModels(models, state.providerMode, state.pricingFilter, todayUtc),
     [models, state.providerMode, state.pricingFilter, todayUtc],
-  )
+  );
 
   const filteredModels = useMemo(
     () => applyExplorerFilters(activeModels, state, todayUtc),
     [activeModels, state, todayUtc],
-  )
+  );
 
   const facetSource = useMemo(
-    () => (state.pricingFilter === 'free' ? freeAndUnexpired : derived.filter((m) => m.isUnexpired)),
+    () =>
+      state.pricingFilter === "free" ? freeAndUnexpired : derived.filter((m) => m.isUnexpired),
     [state.pricingFilter, freeAndUnexpired, derived],
-  )
-  const facets = useMemo(() => getFacets(facetSource), [facetSource])
+  );
+  const facets = useMemo(() => getFacets(facetSource), [facetSource]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault()
-        setPaletteOpen((prev) => !prev)
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((prev) => !prev);
       }
 
-      if (event.key === 'Escape') {
-        setPaletteOpen(false)
+      if (event.key === "Escape") {
+        setPaletteOpen(false);
       }
-    }
+    };
 
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleCopyShareUrl = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
-      setNotice('Share URL copied to clipboard')
-      window.setTimeout(() => setNotice(null), 1800)
+      await navigator.clipboard.writeText(window.location.href);
+      setNotice("Share URL copied to clipboard");
+      window.setTimeout(() => setNotice(null), 1800);
     } catch {
-      setNotice('Clipboard access failed')
-      window.setTimeout(() => setNotice(null), 1800)
+      setNotice("Clipboard access failed");
+      window.setTimeout(() => setNotice(null), 1800);
     }
-  }
+  };
 
-  if (route === 'config') {
+  if (route === "config") {
     return (
       <div className="app-shell">
         <main className="app-layout">
@@ -93,14 +95,11 @@ function App() {
               <h2>Loading models...</h2>
             </section>
           ) : (
-            <ConfigGenerator
-              models={freeAndUnexpired}
-              onBack={() => navigate('explorer')}
-            />
+            <ConfigGenerator models={freeAndUnexpired} onBack={() => navigate("explorer")} />
           )}
         </main>
       </div>
-    )
+    );
   }
 
   return (
@@ -116,7 +115,7 @@ function App() {
           onRefresh={() => void modelsQuery.refetch()}
           theme={theme}
           onToggleTheme={toggleTheme}
-          onNavigateConfig={() => navigate('config')}
+          onNavigateConfig={() => navigate("config")}
         />
 
         <MetricsStrip derivedAll={derived} visible={filteredModels} />
@@ -141,7 +140,11 @@ function App() {
 
         {modelsQuery.isError ? (
           <ErrorState
-            message={modelsQuery.error instanceof Error ? modelsQuery.error.message : 'Unknown request error'}
+            message={
+              modelsQuery.error instanceof Error
+                ? modelsQuery.error.message
+                : "Unknown request error"
+            }
             onRetry={() => void modelsQuery.refetch()}
           />
         ) : null}
@@ -169,7 +172,7 @@ function App() {
         models={activeModels}
         providerFacets={facets.providers}
         onUpdate={update}
-        onToggleProvider={(provider) => toggleListFilter('providers', provider)}
+        onToggleProvider={(provider) => toggleListFilter("providers", provider)}
         onProviderModeChange={setProviderMode}
         onSortChange={setSort}
         onClearFilters={clearFilters}
@@ -179,7 +182,7 @@ function App() {
         onToggleTheme={toggleTheme}
       />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

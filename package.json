@@ -8,10 +8,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",
-    "format": "oxfmt",
+    "format": "oxfmt --write \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "lint:fix": "oxlint . --fix",
+    "format:check": "oxfmt --check \"**/*.{js,mjs,cjs,ts,tsx,jsx}\" --ignore-path .gitignore --no-error-on-unmatched-pattern",
+    "typecheck": "tsc -b --pretty false",
+    "test:ci": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

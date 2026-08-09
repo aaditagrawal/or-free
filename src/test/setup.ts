@@ -1,19 +1,19 @@
-import { cleanup } from '@testing-library/react'
-import { afterEach, beforeAll, vi } from 'vitest'
+import { cleanup } from "@testing-library/react";
+import { afterEach, beforeAll, vi } from "vitest";
 
 afterEach(() => {
-  cleanup()
-})
+  cleanup();
+});
 
 beforeAll(() => {
-  Object.defineProperty(window.navigator, 'clipboard', {
+  Object.defineProperty(window.navigator, "clipboard", {
     value: {
       writeText: vi.fn(async () => undefined),
     },
     configurable: true,
-  })
+  });
 
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
       matches: false,
@@ -25,7 +25,7 @@ beforeAll(() => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     })),
-  })
+  });
 
   class ResizeObserverMock {
     observe() {}
@@ -33,15 +33,15 @@ beforeAll(() => {
     disconnect() {}
   }
 
-  Object.defineProperty(window, 'ResizeObserver', {
+  Object.defineProperty(window, "ResizeObserver", {
     writable: true,
     configurable: true,
     value: ResizeObserverMock,
-  })
+  });
 
-  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
     value: vi.fn(),
     writable: true,
     configurable: true,
-  })
-})
+  });
+});

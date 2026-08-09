@@ -1,45 +1,45 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from "react";
 
-export type Route = 'explorer' | 'request' | 'config'
+export type Route = "explorer" | "request" | "config";
 
 type HashState = {
-  route: Route
-  search: string
-}
+  route: Route;
+  search: string;
+};
 
 export function parseHash(hash: string): HashState {
-  const stripped = hash.replace(/^#\/?/, '')
-  const [segment, ...rest] = stripped.split('?')
-  const route = segment === 'request' ? 'request' : segment === 'config' ? 'config' : 'explorer'
-  const search = rest.join('?')
-  return { route, search: search ? `?${search}` : '' }
+  const stripped = hash.replace(/^#\/?/, "");
+  const [segment, ...rest] = stripped.split("?");
+  const route = segment === "request" ? "request" : segment === "config" ? "config" : "explorer";
+  const search = rest.join("?");
+  return { route, search: search ? `?${search}` : "" };
 }
 
 export function buildHash(route: Route, search?: string): string {
-  const q = search ? search.replace(/^\??/, '?') : ''
-  return `#/${route}${q}`
+  const q = search ? search.replace(/^\??/, "?") : "";
+  return `#/${route}${q}`;
 }
 
 function getSnapshot(): string {
-  return window.location.hash
+  return window.location.hash;
 }
 
 function getServerSnapshot(): string {
-  return '#/explorer'
+  return "#/explorer";
 }
 
 function subscribe(onStoreChange: () => void): () => void {
-  window.addEventListener('hashchange', onStoreChange)
-  return () => window.removeEventListener('hashchange', onStoreChange)
+  window.addEventListener("hashchange", onStoreChange);
+  return () => window.removeEventListener("hashchange", onStoreChange);
 }
 
 export function useHashRouter() {
-  const hash = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
-  const { route, search } = parseHash(hash)
+  const hash = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const { route, search } = parseHash(hash);
 
   const navigate = useCallback((nextRoute: Route, nextSearch?: string) => {
-    window.location.hash = buildHash(nextRoute, nextSearch)
-  }, [])
+    window.location.hash = buildHash(nextRoute, nextSearch);
+  }, []);
 
-  return { route, search, navigate }
+  return { route, search, navigate };
 }

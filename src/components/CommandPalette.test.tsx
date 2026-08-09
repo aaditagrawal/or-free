@@ -1,35 +1,35 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import type { ExplorerState } from '../types/explorer'
-import { CommandPalette } from './CommandPalette'
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import type { ExplorerState } from "../types/explorer";
+import { CommandPalette } from "./CommandPalette";
 
 function buildState(): ExplorerState {
   return {
-    q: '',
+    q: "",
     providers: [],
     inputModalities: [],
     outputModalities: [],
     instructTypes: [],
     supportedParameters: [],
-    moderated: 'all',
+    moderated: "all",
     minContextLength: null,
     minMaxCompletionTokens: null,
     createdFrom: null,
     createdTo: null,
-    expiryMode: 'all',
-    pricingFilter: 'free',
-    providerMode: 'strict',
-    sortKey: 'created',
-    sortDirection: 'desc',
-  }
+    expiryMode: "all",
+    pricingFilter: "free",
+    providerMode: "strict",
+    sortKey: "created",
+    sortDirection: "desc",
+  };
 }
 
-describe('CommandPalette', () => {
-  it('switches provider mode to include_incomplete from command action', async () => {
-    const user = userEvent.setup()
-    const onProviderModeChange = vi.fn()
-    const onOpenChange = vi.fn()
+describe("CommandPalette", () => {
+  it("switches provider mode to include_incomplete from command action", async () => {
+    const user = userEvent.setup();
+    const onProviderModeChange = vi.fn();
+    const onOpenChange = vi.fn();
 
     render(
       <CommandPalette
@@ -37,7 +37,7 @@ describe('CommandPalette', () => {
         onOpenChange={onOpenChange}
         state={buildState()}
         models={[]}
-        providerFacets={['Llama3']}
+        providerFacets={["Llama3"]}
         onUpdate={vi.fn()}
         onToggleProvider={vi.fn()}
         onProviderModeChange={onProviderModeChange}
@@ -48,17 +48,17 @@ describe('CommandPalette', () => {
         theme="dark"
         onToggleTheme={vi.fn()}
       />,
-    )
+    );
 
-    await user.click(screen.getByText(/Provider mode: Include incomplete/i))
+    await user.click(screen.getByText(/Provider mode: Include incomplete/i));
 
-    expect(onProviderModeChange).toHaveBeenCalledWith('include_incomplete')
-    expect(onOpenChange).toHaveBeenCalledWith(false)
-  })
+    expect(onProviderModeChange).toHaveBeenCalledWith("include_incomplete");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 
-  it('runs copy share url action', async () => {
-    const user = userEvent.setup()
-    const onCopyShareUrl = vi.fn(async () => undefined)
+  it("runs copy share url action", async () => {
+    const user = userEvent.setup();
+    const onCopyShareUrl = vi.fn(async () => undefined);
 
     render(
       <CommandPalette
@@ -66,7 +66,7 @@ describe('CommandPalette', () => {
         onOpenChange={vi.fn()}
         state={buildState()}
         models={[]}
-        providerFacets={['Llama3']}
+        providerFacets={["Llama3"]}
         onUpdate={vi.fn()}
         onToggleProvider={vi.fn()}
         onProviderModeChange={vi.fn()}
@@ -77,10 +77,10 @@ describe('CommandPalette', () => {
         theme="dark"
         onToggleTheme={vi.fn()}
       />,
-    )
+    );
 
-    await user.click(screen.getByText(/Copy share URL/i))
+    await user.click(screen.getByText(/Copy share URL/i));
 
-    expect(onCopyShareUrl).toHaveBeenCalledTimes(1)
-  })
-})
+    expect(onCopyShareUrl).toHaveBeenCalledTimes(1);
+  });
+});

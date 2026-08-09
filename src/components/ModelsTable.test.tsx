@@ -1,87 +1,82 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactElement } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { OpenRouterModel } from '../types/openrouter'
-import { toDerivedModel } from '../lib/models'
-import { ModelsTable } from './ModelsTable'
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactElement } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { OpenRouterModel } from "../types/openrouter";
+import { toDerivedModel } from "../lib/models";
+import { ModelsTable } from "./ModelsTable";
 
-const logoSvg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M0 0h24v24H0z"/></svg>'
+const logoSvg = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M0 0h24v24H0z"/></svg>';
 
 beforeEach(() => {
   vi.stubGlobal(
-    'fetch',
-    vi.fn(async () =>
-      new Response(logoSvg, {
-        headers: { 'Content-Type': 'image/svg+xml' },
-      }),
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(logoSvg, {
+          headers: { "Content-Type": "image/svg+xml" },
+        }),
     ),
-  )
-})
+  );
+});
 
 afterEach(() => {
-  vi.unstubAllGlobals()
-})
+  vi.unstubAllGlobals();
+});
 
 function renderWithQueryClient(ui: ReactElement) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
-  })
+  });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  )
+  );
 
-  return render(ui, { wrapper })
+  return render(ui, { wrapper });
 }
 
 function buildModel(overrides: Partial<OpenRouterModel>): OpenRouterModel {
   return {
-    id: overrides.id ?? 'provider/model:free',
-    canonical_slug: overrides.canonical_slug ?? 'provider-model-free',
-    name: overrides.name ?? 'Model',
+    id: overrides.id ?? "provider/model:free",
+    canonical_slug: overrides.canonical_slug ?? "provider-model-free",
+    name: overrides.name ?? "Model",
     created: overrides.created ?? 1700000000,
-    pricing: overrides.pricing ?? { prompt: '0', completion: '0' },
+    pricing: overrides.pricing ?? { prompt: "0", completion: "0" },
     context_length: overrides.context_length ?? 8192,
-    architecture:
-      overrides.architecture ??
-      {
-        tokenizer: 'Other',
-        instruct_type: 'none',
-        modality: 'text',
-        input_modalities: ['text'],
-        output_modalities: ['text'],
-      },
-    top_provider:
-      overrides.top_provider ??
-      {
-        context_length: 8192,
-        max_completion_tokens: 4096,
-        is_moderated: false,
-      },
-    per_request_limits:
-      overrides.per_request_limits ??
-      {
-        prompt_tokens: 8192,
-        completion_tokens: 4096,
-      },
-    supported_parameters: overrides.supported_parameters ?? ['temperature'],
+    architecture: overrides.architecture ?? {
+      tokenizer: "Other",
+      instruct_type: "none",
+      modality: "text",
+      input_modalities: ["text"],
+      output_modalities: ["text"],
+    },
+    top_provider: overrides.top_provider ?? {
+      context_length: 8192,
+      max_completion_tokens: 4096,
+      is_moderated: false,
+    },
+    per_request_limits: overrides.per_request_limits ?? {
+      prompt_tokens: 8192,
+      completion_tokens: 4096,
+    },
+    supported_parameters: overrides.supported_parameters ?? ["temperature"],
     default_parameters: overrides.default_parameters ?? { temperature: 0.8 },
     expiration_date: overrides.expiration_date ?? null,
     hugging_face_id: overrides.hugging_face_id ?? null,
-    description: overrides.description ?? 'desc',
-  }
+    description: overrides.description ?? "desc",
+  };
 }
 
-describe('ModelsTable', () => {
-  it('shows incomplete provider badge only in include_incomplete mode', () => {
+describe("ModelsTable", () => {
+  it("shows incomplete provider badge only in include_incomplete mode", () => {
     const model = toDerivedModel(
       buildModel({
-        id: 'incomplete',
+        id: "incomplete",
         top_provider: { context_length: null, max_completion_tokens: null, is_moderated: false },
       }),
-      '2026-02-09',
-    )
+      "2026-02-09",
+    );
 
     const { rerender } = renderWithQueryClient(
       <ModelsTable
@@ -92,9 +87,9 @@ describe('ModelsTable', () => {
         sortDirection="desc"
         onSortChange={vi.fn()}
       />,
-    )
+    );
 
-    expect(screen.queryByText(/INCOMPLETE PROVIDER LIMITS/i)).toBeNull()
+    expect(screen.queryByText(/INCOMPLETE PROVIDER LIMITS/i)).toBeNull();
 
     rerender(
       <ModelsTable
@@ -105,33 +100,14 @@ describe('ModelsTable', () => {
         sortDirection="desc"
         onSortChange={vi.fn()}
       />,
-    )
+    );
 
-    expect(screen.getByText(/INCOMPLETE PROVIDER LIMITS/i)).not.toBeNull()
-  })
+    expect(screen.getByText(/INCOMPLETE PROVIDER LIMITS/i)).not.toBeNull();
+  });
 
-  it('expands row details and renders copy json button', async () => {
-    const user = userEvent.setup()
-    const model = toDerivedModel(buildModel({ id: 'expand-me' }), '2026-02-09')
-
-    renderWithQueryClient(
-      <ModelsTable
-        models={[model]}
-        providerMode="include_incomplete"
-        pricingFilter="free"
-        sortKey="created"
-        sortDirection="desc"
-        onSortChange={vi.fn()}
-      />,
-    )
-
-    await user.click(screen.getByRole('button', { name: /Details/i }))
-
-    expect(screen.getByRole('button', { name: /Copy JSON/i })).not.toBeNull()
-  })
-
-  it('shows the provider logo for OpenRouter-style model ids', async () => {
-    const model = toDerivedModel(buildModel({ id: 'anthropic/claude-haiku' }), '2026-02-09')
+  it("expands row details and renders copy json button", async () => {
+    const user = userEvent.setup();
+    const model = toDerivedModel(buildModel({ id: "expand-me" }), "2026-02-09");
 
     renderWithQueryClient(
       <ModelsTable
@@ -142,15 +118,34 @@ describe('ModelsTable', () => {
         sortDirection="desc"
         onSortChange={vi.fn()}
       />,
-    )
+    );
 
-    const logo = screen.getByRole('img', { name: /anthropic provider logo/i })
+    await user.click(screen.getByRole("button", { name: /Details/i }));
 
-    expect(logo).not.toBeNull()
+    expect(screen.getByRole("button", { name: /Copy JSON/i })).not.toBeNull();
+  });
+
+  it("shows the provider logo for OpenRouter-style model ids", async () => {
+    const model = toDerivedModel(buildModel({ id: "anthropic/claude-haiku" }), "2026-02-09");
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    );
+
+    const logo = screen.getByRole("img", { name: /anthropic provider logo/i });
+
+    expect(logo).not.toBeNull();
     expect(fetch).toHaveBeenCalledWith(
-      'https://models.dev/logos/anthropic.svg',
-      expect.objectContaining({ headers: { Accept: 'image/svg+xml' } }),
-    )
-    await waitFor(() => expect(logo.querySelector('svg')).not.toBeNull())
-  })
-})
+      "https://models.dev/logos/anthropic.svg",
+      expect.objectContaining({ headers: { Accept: "image/svg+xml" } }),
+    );
+    await waitFor(() => expect(logo.querySelector("svg")).not.toBeNull());
+  });
+});

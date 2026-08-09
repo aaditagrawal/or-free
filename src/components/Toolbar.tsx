@@ -91,9 +91,7 @@ export function Toolbar({
         <div className="toolbar-controls">
           <select
             value={state.pricingFilter}
-            onChange={(event) =>
-              onUpdate({ pricingFilter: event.target.value as PricingFilter })
-            }
+            onChange={(event) => onUpdate({ pricingFilter: event.target.value as PricingFilter })}
             aria-label="Pricing filter"
           >
             <option value="free">Free only</option>
@@ -102,9 +100,7 @@ export function Toolbar({
 
           <select
             value={state.providerMode}
-            onChange={(event) =>
-              onProviderModeChange(event.target.value as ProviderMode)
-            }
+            onChange={(event) => onProviderModeChange(event.target.value as ProviderMode)}
             aria-label="Provider mode"
           >
             <option value="include_incomplete">Incomplete</option>
@@ -113,9 +109,7 @@ export function Toolbar({
 
           <select
             value={state.sortKey}
-            onChange={(event) =>
-              onUpdate({ sortKey: event.target.value as SortKey })
-            }
+            onChange={(event) => onUpdate({ sortKey: event.target.value as SortKey })}
             aria-label="Sort by"
           >
             {SORT_KEY_OPTIONS.map((option) => (
@@ -127,9 +121,7 @@ export function Toolbar({
 
           <select
             value={state.sortDirection}
-            onChange={(event) =>
-              onUpdate({ sortDirection: event.target.value as SortDirection })
-            }
+            onChange={(event) => onUpdate({ sortDirection: event.target.value as SortDirection })}
             aria-label="Sort direction"
           >
             {SORT_DIRECTION_OPTIONS.map((option) => (
@@ -139,11 +131,7 @@ export function Toolbar({
             ))}
           </select>
 
-          <button
-            type="button"
-            className="button button-accent"
-            onClick={onOpenPalette}
-          >
+          <button type="button" className="button button-accent" onClick={onOpenPalette}>
             ⌘K
           </button>
         </div>
@@ -152,14 +140,9 @@ export function Toolbar({
       {activeFilterCount > 0 ? (
         <div className="toolbar-active-filters">
           <span>
-            {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}{" "}
-            active
+            {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""} active
           </span>
-          <button
-            type="button"
-            className="button button-small"
-            onClick={onClearFilters}
-          >
+          <button type="button" className="button button-small" onClick={onClearFilters}>
             Reset
           </button>
         </div>
@@ -211,9 +194,7 @@ export function Toolbar({
               value={state.minContextLength ?? ""}
               onChange={(event) =>
                 onUpdate({
-                  minContextLength: event.target.value
-                    ? Number(event.target.value)
-                    : null,
+                  minContextLength: event.target.value ? Number(event.target.value) : null,
                 })
               }
               placeholder="32768"
@@ -228,9 +209,7 @@ export function Toolbar({
               value={state.minMaxCompletionTokens ?? ""}
               onChange={(event) =>
                 onUpdate({
-                  minMaxCompletionTokens: event.target.value
-                    ? Number(event.target.value)
-                    : null,
+                  minMaxCompletionTokens: event.target.value ? Number(event.target.value) : null,
                 })
               }
               placeholder="8192"
@@ -242,9 +221,7 @@ export function Toolbar({
             <input
               type="date"
               value={state.createdFrom ?? ""}
-              onChange={(event) =>
-                onUpdate({ createdFrom: event.target.value || null })
-              }
+              onChange={(event) => onUpdate({ createdFrom: event.target.value || null })}
             />
           </label>
 
@@ -253,9 +230,7 @@ export function Toolbar({
             <input
               type="date"
               value={state.createdTo ?? ""}
-              onChange={(event) =>
-                onUpdate({ createdTo: event.target.value || null })
-              }
+              onChange={(event) => onUpdate({ createdTo: event.target.value || null })}
             />
           </label>
         </div>
@@ -290,9 +265,7 @@ export function Toolbar({
             title="Parameters"
             options={facets.supportedParameters}
             selected={state.supportedParameters}
-            onToggle={(value) =>
-              onToggleListFilter("supportedParameters", value)
-            }
+            onToggle={(value) => onToggleListFilter("supportedParameters", value)}
             maxVisible={18}
           />
         </div>

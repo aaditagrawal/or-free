@@ -3,100 +3,100 @@ import type {
   ModelsDevResponse,
   OpenRouterModel,
   OpenRouterModelsResponse,
-} from '../types/openrouter'
-import { fetchOrcaModels } from './orca'
+} from "../types/openrouter";
+import { fetchOrcaModels } from "./orca";
 
 // OpenRouter supports CORS, so we can hit it directly from the browser —
 // no proxy needed. This is the fast primary source.
-export const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
-export const MODELS_DEV_URL = 'https://models.dev/api.json'
+export const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
+export const MODELS_DEV_URL = "https://models.dev/api.json";
 
 export async function fetchOpenRouterModels(
   signal?: AbortSignal,
 ): Promise<OpenRouterModelsResponse> {
   const response = await fetch(OPENROUTER_MODELS_URL, {
-    method: 'GET',
+    method: "GET",
     signal,
-    headers: { Accept: 'application/json' },
-  })
+    headers: { Accept: "application/json" },
+  });
 
   if (!response.ok) {
-    throw new Error(`OpenRouter request failed (${response.status})`)
+    throw new Error(`OpenRouter request failed (${response.status})`);
   }
 
-  const payload = (await response.json()) as OpenRouterModelsResponse
+  const payload = (await response.json()) as OpenRouterModelsResponse;
 
   if (!payload || !Array.isArray(payload.data)) {
-    throw new Error('OpenRouter payload missing model list')
+    throw new Error("OpenRouter payload missing model list");
   }
 
-  return payload
+  return payload;
 }
 
 export async function fetchModelsDev(signal?: AbortSignal): Promise<ModelsDevResponse> {
   const response = await fetch(MODELS_DEV_URL, {
-    method: 'GET',
+    method: "GET",
     signal,
-    headers: { Accept: 'application/json' },
-  })
+    headers: { Accept: "application/json" },
+  });
 
   if (!response.ok) {
-    throw new Error(`models.dev request failed (${response.status})`)
+    throw new Error(`models.dev request failed (${response.status})`);
   }
 
-  const payload = (await response.json()) as ModelsDevResponse
+  const payload = (await response.json()) as ModelsDevResponse;
 
-  if (!payload || typeof payload !== 'object' || !payload.openrouter?.models) {
-    throw new Error('models.dev payload missing OpenRouter model map')
+  if (!payload || typeof payload !== "object" || !payload.openrouter?.models) {
+    throw new Error("models.dev payload missing OpenRouter model map");
   }
 
-  return payload
+  return payload;
 }
 
 // ORCA is routed through our same-origin proxy (no CORS upstream).
-export { fetchOrcaModels }
+export { fetchOrcaModels };
 
 // Back-compat alias — treats ORCA as the sole source. Not used by the
 // merged hook but kept to avoid breaking any external callers.
 export function fetchModels(signal?: AbortSignal): Promise<OpenRouterModelsResponse> {
-  return fetchOrcaModels(signal)
+  return fetchOrcaModels(signal);
 }
 
 function getModelsDevOpenRouterModels(modelsDev: ModelsDevResponse | undefined) {
-  return modelsDev?.openrouter?.models
+  return modelsDev?.openrouter?.models;
 }
 
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string')
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 function joinModalities(input: string[], output: string[]): string | null {
   if (input.length === 0 || output.length === 0) {
-    return null
+    return null;
   }
 
-  return `${input.join('+')}->${output.join('+')}`
+  return `${input.join("+")}->${output.join("+")}`;
 }
 
 function mergeSupportedParameters(
   supportedParameters: string[],
   modelsDevModel: ModelsDevModel,
 ): string[] {
-  const merged = new Set(supportedParameters)
+  const merged = new Set(supportedParameters);
 
   if (modelsDevModel.tool_call) {
-    merged.add('tools')
+    merged.add("tools");
   }
 
   if (modelsDevModel.structured_output) {
-    merged.add('structured_outputs')
+    merged.add("structured_outputs");
   }
 
   if (modelsDevModel.temperature) {
-    merged.add('temperature')
+    merged.add("temperature");
   }
 
-  return [...merged]
+  return [...merged];
 }
 
 function enrichModelWithModelsDev(
@@ -104,19 +104,19 @@ function enrichModelWithModelsDev(
   modelsDevModel: ModelsDevModel | undefined,
 ): OpenRouterModel {
   if (!modelsDevModel) {
-    return model
+    return model;
   }
 
   const inputModalities = isStringArray(modelsDevModel.modalities?.input)
     ? modelsDevModel.modalities.input
-    : model.architecture.input_modalities
+    : model.architecture.input_modalities;
   const outputModalities = isStringArray(modelsDevModel.modalities?.output)
     ? modelsDevModel.modalities.output
-    : model.architecture.output_modalities
-  const contextLength = modelsDevModel.limit?.context ?? model.context_length
+    : model.architecture.output_modalities;
+  const contextLength = modelsDevModel.limit?.context ?? model.context_length;
   const maxCompletionTokens =
-    modelsDevModel.limit?.output ?? model.top_provider.max_completion_tokens
-  const modality = joinModalities(inputModalities ?? [], outputModalities ?? [])
+    modelsDevModel.limit?.output ?? model.top_provider.max_completion_tokens;
+  const modality = joinModalities(inputModalities ?? [], outputModalities ?? []);
 
   return {
     ...model,
@@ -134,7 +134,7 @@ function enrichModelWithModelsDev(
     },
     supported_parameters: mergeSupportedParameters(model.supported_parameters, modelsDevModel),
     models_dev: modelsDevModel,
-  }
+  };
 }
 
 // Union merge: OR is canonical (complete shape including expiration_date,
@@ -145,34 +145,34 @@ export function mergeModelSources(
   orca: OpenRouterModelsResponse | undefined,
   modelsDev?: ModelsDevResponse,
 ): OpenRouterModelsResponse | undefined {
-  if (!or && !orca) return undefined
-  const modelsDevModels = getModelsDevOpenRouterModels(modelsDev)
+  if (!or && !orca) return undefined;
+  const modelsDevModels = getModelsDevOpenRouterModels(modelsDev);
 
   if (!orca) {
-    if (!or) return undefined
+    if (!or) return undefined;
     return {
       data: or.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
-    }
+    };
   }
 
   if (!or) {
     return {
       data: orca.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
-    }
+    };
   }
 
-  const seen = new Set<string>()
-  const merged = []
+  const seen = new Set<string>();
+  const merged = [];
 
   for (const model of or.data) {
-    seen.add(model.id)
-    merged.push(enrichModelWithModelsDev(model, modelsDevModels?.[model.id]))
+    seen.add(model.id);
+    merged.push(enrichModelWithModelsDev(model, modelsDevModels?.[model.id]));
   }
 
   for (const model of orca.data) {
-    if (seen.has(model.id)) continue
-    merged.push(enrichModelWithModelsDev(model, modelsDevModels?.[model.id]))
+    if (seen.has(model.id)) continue;
+    merged.push(enrichModelWithModelsDev(model, modelsDevModels?.[model.id]));
   }
 
-  return { data: merged }
+  return { data: merged };
 }

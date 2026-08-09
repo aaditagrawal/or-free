@@ -1,74 +1,72 @@
-import { useCallback, useMemo, useState } from 'react'
-import clsx from 'clsx'
-import type { DerivedModel } from '../types/explorer'
-import { formatFullConfig } from '../lib/opencode'
+import { useCallback, useMemo, useState } from "react";
+import clsx from "clsx";
+import type { DerivedModel } from "../types/explorer";
+import { formatFullConfig } from "../lib/opencode";
 
 type ConfigGeneratorProps = {
-  models: DerivedModel[]
-  onBack: () => void
-}
+  models: DerivedModel[];
+  onBack: () => void;
+};
 
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
-    } catch { /* noop */ }
-  }, [text])
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* noop */
+    }
+  }, [text]);
 
   return (
     <button type="button" className="button button-small" onClick={handleCopy}>
-      {copied ? 'Copied' : 'Copy JSON'}
+      {copied ? "Copied" : "Copy JSON"}
     </button>
-  )
+  );
 }
 
 export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
-  const [selected, setSelected] = useState<Set<string>>(() => new Set())
-  const [search, setSearch] = useState('')
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return models
-    const q = search.toLowerCase()
-    return models.filter(
-      (m) =>
-        m.name.toLowerCase().includes(q) ||
-        m.id.toLowerCase().includes(q),
-    )
-  }, [models, search])
+    if (!search.trim()) return models;
+    const q = search.toLowerCase();
+    return models.filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q));
+  }, [models, search]);
 
   const selectedModels = useMemo(
     () => models.filter((m) => selected.has(m.id)),
     [models, selected],
-  )
+  );
 
   const configJson = useMemo(
-    () => (selectedModels.length > 0 ? formatFullConfig(selectedModels) : ''),
+    () => (selectedModels.length > 0 ? formatFullConfig(selectedModels) : ""),
     [selectedModels],
-  )
+  );
 
   const toggleModel = (id: string) => {
     setSelected((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(id)) {
-        next.delete(id)
+        next.delete(id);
       } else {
-        next.add(id)
+        next.add(id);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const selectAll = () => {
-    setSelected(new Set(filtered.map((m) => m.id)))
-  }
+    setSelected(new Set(filtered.map((m) => m.id)));
+  };
 
   const clearAll = () => {
-    setSelected(new Set())
-  }
+    setSelected(new Set());
+  };
 
   return (
     <div className="config-page">
@@ -81,8 +79,8 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
         </div>
         <p className="config-lede">
           Select free models below to generate an <code>opencode.json</code> configuration file.
-          Models are configured under the OpenRouter provider. Set <code>OPENROUTER_API_KEY</code> in
-          your shell profile (<code>~/.bashrc</code> or <code>~/.zshrc</code>):
+          Models are configured under the OpenRouter provider. Set <code>OPENROUTER_API_KEY</code>{" "}
+          in your shell profile (<code>~/.bashrc</code> or <code>~/.zshrc</code>):
         </p>
         <pre className="config-env-hint">export OPENROUTER_API_KEY="sk-or-..."</pre>
       </div>
@@ -98,11 +96,15 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
               </div>
               <div>
                 <dt>model</dt>
-                <dd>Default model in <code>provider/model-id</code> format</dd>
+                <dd>
+                  Default model in <code>provider/model-id</code> format
+                </dd>
               </div>
               <div>
                 <dt>provider.*.npm</dt>
-                <dd>AI SDK npm package (e.g. <code>@ai-sdk/openai-compatible</code>)</dd>
+                <dd>
+                  AI SDK npm package (e.g. <code>@ai-sdk/openai-compatible</code>)
+                </dd>
               </div>
               <div>
                 <dt>provider.*.name</dt>
@@ -114,7 +116,9 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
               </div>
               <div>
                 <dt>provider.*.options.apiKey</dt>
-                <dd>API key, supports <code>{'{env:VAR_NAME}'}</code> syntax</dd>
+                <dd>
+                  API key, supports <code>{"{env:VAR_NAME}"}</code> syntax
+                </dd>
               </div>
               <div>
                 <dt>provider.*.models.*.name</dt>
@@ -156,12 +160,12 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
 
           <div className="config-model-list">
             {filtered.map((model) => {
-              const isSelected = selected.has(model.id)
+              const isSelected = selected.has(model.id);
               return (
                 <button
                   key={model.id}
                   type="button"
-                  className={clsx('config-model-item', isSelected && 'config-model-active')}
+                  className={clsx("config-model-item", isSelected && "config-model-active")}
                   onClick={() => toggleModel(model.id)}
                 >
                   <div className="config-model-info">
@@ -169,11 +173,21 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
                     <span>{model.id}</span>
                   </div>
                   <div className="config-model-meta">
-                    <span>ctx: {model.contextLength ? Intl.NumberFormat().format(model.contextLength) : 'n/a'}</span>
-                    <span>out: {model.maxCompletionTokens ? Intl.NumberFormat().format(model.maxCompletionTokens) : 'n/a'}</span>
+                    <span>
+                      ctx:{" "}
+                      {model.contextLength
+                        ? Intl.NumberFormat().format(model.contextLength)
+                        : "n/a"}
+                    </span>
+                    <span>
+                      out:{" "}
+                      {model.maxCompletionTokens
+                        ? Intl.NumberFormat().format(model.maxCompletionTokens)
+                        : "n/a"}
+                    </span>
                   </div>
                 </button>
-              )
+              );
             })}
             {filtered.length === 0 ? (
               <p className="config-empty">No models match your search.</p>
@@ -196,5 +210,5 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,84 +1,84 @@
-import type { DerivedModel, PricingFilter, ProviderMode } from '../types/explorer'
-import type { OpenRouterModel } from '../types/openrouter'
+import type { DerivedModel, PricingFilter, ProviderMode } from "../types/explorer";
+import type { OpenRouterModel } from "../types/openrouter";
 
-export const MS_PER_DAY = 24 * 60 * 60 * 1000
-export const MODELS_DEV_LOGO_BASE_URL = 'https://models.dev/logos'
+export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export const MODELS_DEV_LOGO_BASE_URL = "https://models.dev/logos";
 
 export function toNumber(value: unknown): number {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : Number.NaN
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : Number.NaN;
   }
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim()
+  if (typeof value === "string") {
+    const trimmed = value.trim();
     if (trimmed.length === 0) {
-      return Number.NaN
+      return Number.NaN;
     }
 
-    const parsed = Number(trimmed)
-    return Number.isFinite(parsed) ? parsed : Number.NaN
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
   }
 
-  return Number.NaN
+  return Number.NaN;
 }
 
 export function getUtcDateStamp(date = new Date()): string {
-  return date.toISOString().slice(0, 10)
+  return date.toISOString().slice(0, 10);
 }
 
 function unixToMs(unixMaybeSeconds: number): number {
   if (!Number.isFinite(unixMaybeSeconds)) {
-    return Date.now()
+    return Date.now();
   }
 
   // OpenRouter currently returns second-based unix timestamps.
-  return unixMaybeSeconds > 1e12 ? unixMaybeSeconds : unixMaybeSeconds * 1000
+  return unixMaybeSeconds > 1e12 ? unixMaybeSeconds : unixMaybeSeconds * 1000;
 }
 
 export function getProviderId(modelId: string): string | null {
-  const providerId = modelId.split('/')[0]?.replace(/^~+/, '').trim()
+  const providerId = modelId.split("/")[0]?.replace(/^~+/, "").trim();
 
-  return providerId ? providerId : null
+  return providerId ? providerId : null;
 }
 
 export function getProviderLogoUrl(providerId: string | null): string | null {
   if (!providerId) {
-    return null
+    return null;
   }
 
-  return `${MODELS_DEV_LOGO_BASE_URL}/${encodeURIComponent(providerId)}.svg`
+  return `${MODELS_DEV_LOGO_BASE_URL}/${encodeURIComponent(providerId)}.svg`;
 }
 
 export function isFree(model: OpenRouterModel): boolean {
-  return toNumber(model.pricing.prompt) === 0 && toNumber(model.pricing.completion) === 0
+  return toNumber(model.pricing.prompt) === 0 && toNumber(model.pricing.completion) === 0;
 }
 
 export function isUnexpired(model: OpenRouterModel, todayUtc = getUtcDateStamp()): boolean {
-  const expirationDate = model.expiration_date
+  const expirationDate = model.expiration_date;
   if (!expirationDate) {
-    return true
+    return true;
   }
 
-  return expirationDate >= todayUtc
+  return expirationDate >= todayUtc;
 }
 
 export function isProviderReady(model: OpenRouterModel): boolean {
-  const provider = model.top_provider ?? {}
+  const provider = model.top_provider ?? {};
 
   // Context length is the load-bearing field. max_completion_tokens is nice
   // to have but many upstream providers omit it; don't penalize the model
   // for that alone.
-  return provider.context_length != null
+  return provider.context_length != null;
 }
 
 export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStamp()): DerivedModel {
-  const createdMs = unixToMs(model.created)
-  const contextLength = model.context_length == null ? null : toNumber(model.context_length)
+  const createdMs = unixToMs(model.created);
+  const contextLength = model.context_length == null ? null : toNumber(model.context_length);
   const maxCompletionTokens =
     model.top_provider?.max_completion_tokens == null
       ? null
-      : toNumber(model.top_provider.max_completion_tokens)
-  const providerId = getProviderId(model.id)
+      : toNumber(model.top_provider.max_completion_tokens);
+  const providerId = getProviderId(model.id);
 
   return {
     raw: model,
@@ -87,17 +87,15 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
     providerId,
     providerLogoUrl: getProviderLogoUrl(providerId),
     name: model.name,
-    description: model.description ?? '',
+    description: model.description ?? "",
     createdMs,
     createdIso: new Date(createdMs).toISOString(),
     promptPrice: toNumber(model.pricing.prompt),
     completionPrice: toNumber(model.pricing.completion),
     contextLength: Number.isNaN(contextLength) ? null : contextLength,
     maxCompletionTokens:
-      maxCompletionTokens == null || Number.isNaN(maxCompletionTokens)
-        ? null
-        : maxCompletionTokens,
-    tokenizer: model.architecture.tokenizer ?? 'Unknown',
+      maxCompletionTokens == null || Number.isNaN(maxCompletionTokens) ? null : maxCompletionTokens,
+    tokenizer: model.architecture.tokenizer ?? "Unknown",
     instructType: model.architecture.instruct_type ?? null,
     modality: model.architecture.modality ?? null,
     inputModalities: model.architecture.input_modalities ?? [],
@@ -118,11 +116,14 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
     isFree: isFree(model),
     isUnexpired: isUnexpired(model, todayUtc),
     isProviderReady: isProviderReady(model),
-  }
+  };
 }
 
-export function deriveModels(models: OpenRouterModel[], todayUtc = getUtcDateStamp()): DerivedModel[] {
-  return models.map((model) => toDerivedModel(model, todayUtc))
+export function deriveModels(
+  models: OpenRouterModel[],
+  todayUtc = getUtcDateStamp(),
+): DerivedModel[] {
+  return models.map((model) => toDerivedModel(model, todayUtc));
 }
 
 export function selectActiveModels(
@@ -131,71 +132,77 @@ export function selectActiveModels(
   pricingFilter: PricingFilter,
   todayUtc = getUtcDateStamp(),
 ): DerivedModel[] {
-  const derived = deriveModels(models, todayUtc)
+  const derived = deriveModels(models, todayUtc);
 
   return derived.filter((model) => {
-    if (pricingFilter === 'free' && !model.isFree) {
-      return false
+    if (pricingFilter === "free" && !model.isFree) {
+      return false;
     }
 
     if (!model.isUnexpired) {
-      return false
+      return false;
     }
 
-    if (providerMode === 'strict') {
-      return model.isProviderReady
+    if (providerMode === "strict") {
+      return model.isProviderReady;
     }
 
-    return true
-  })
+    return true;
+  });
 }
 
-export function daysUntilExpiration(expirationDate: string | null, todayUtc = getUtcDateStamp()): number | null {
+export function daysUntilExpiration(
+  expirationDate: string | null,
+  todayUtc = getUtcDateStamp(),
+): number | null {
   if (!expirationDate) {
-    return null
+    return null;
   }
 
-  const start = new Date(`${todayUtc}T00:00:00.000Z`).getTime()
-  const end = new Date(`${expirationDate}T00:00:00.000Z`).getTime()
+  const start = new Date(`${todayUtc}T00:00:00.000Z`).getTime();
+  const end = new Date(`${expirationDate}T00:00:00.000Z`).getTime();
 
   if (!Number.isFinite(start) || !Number.isFinite(end)) {
-    return null
+    return null;
   }
 
-  return Math.floor((end - start) / MS_PER_DAY)
+  return Math.floor((end - start) / MS_PER_DAY);
 }
 
-export function isExpiringSoon(expirationDate: string | null, todayUtc = getUtcDateStamp()): boolean {
-  const days = daysUntilExpiration(expirationDate, todayUtc)
+export function isExpiringSoon(
+  expirationDate: string | null,
+  todayUtc = getUtcDateStamp(),
+): boolean {
+  const days = daysUntilExpiration(expirationDate, todayUtc);
   if (days == null) {
-    return false
+    return false;
   }
 
-  return days >= 0 && days <= 30
+  return days >= 0 && days <= 30;
 }
 
 export function getFacets(models: DerivedModel[]) {
-  const providers = new Set<string>()
-  const inputModalities = new Set<string>()
-  const outputModalities = new Set<string>()
-  const instructTypes = new Set<string>()
-  const supportedParameters = new Set<string>()
+  const providers = new Set<string>();
+  const inputModalities = new Set<string>();
+  const outputModalities = new Set<string>();
+  const instructTypes = new Set<string>();
+  const supportedParameters = new Set<string>();
 
   for (const model of models) {
-    providers.add(model.tokenizer)
+    providers.add(model.tokenizer);
 
     for (const modality of model.inputModalities) {
-      inputModalities.add(modality)
+      inputModalities.add(modality);
     }
 
     for (const modality of model.outputModalities) {
-      outputModalities.add(modality)
+      outputModalities.add(modality);
     }
 
-    instructTypes.add(model.instructType ?? 'null')
+    instructTypes.add(model.instructType ?? "null");
 
     for (const parameter of model.supportedParameters) {
-      supportedParameters.add(parameter)
+      supportedParameters.add(parameter);
     }
   }
 
@@ -205,13 +212,13 @@ export function getFacets(models: DerivedModel[]) {
     outputModalities: [...outputModalities].sort((a, b) => a.localeCompare(b)),
     instructTypes: [...instructTypes].sort((a, b) => a.localeCompare(b)),
     supportedParameters: [...supportedParameters].sort((a, b) => a.localeCompare(b)),
-  }
+  };
 }
 
 export function formatDate(dateIso: string | null): string {
   if (!dateIso) {
-    return 'None'
+    return "None";
   }
 
-  return dateIso
+  return dateIso;
 }
