@@ -6,6 +6,9 @@ import { defineConfig } from 'vite'
 // at src/worker/index.ts.
 export default defineConfig({
   plugins: [react()],
+  build: {
+    minify: 'oxc',
+  },
   server: {
     proxy: {
       '/api/models': {
