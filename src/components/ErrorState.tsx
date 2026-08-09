@@ -1,7 +1,7 @@
 type ErrorStateProps = {
-  message: string
-  onRetry: () => void
-}
+  message: string;
+  onRetry: () => void;
+};
 
 export function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
@@ -12,5 +12,5 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
         Retry
       </button>
     </section>
-  )
+  );
 }

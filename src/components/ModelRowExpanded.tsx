@@ -1,90 +1,90 @@
-import { useState } from 'react'
-import type { DerivedModel } from '../types/explorer'
-import type { OpenRouterPricing } from '../types/openrouter'
-import { formatModelConfigSnippet } from '../lib/opencode'
-import { ProviderLogo } from './ProviderLogo'
+import { useState } from "react";
+import type { DerivedModel } from "../types/explorer";
+import type { OpenRouterPricing } from "../types/openrouter";
+import { formatModelConfigSnippet } from "../lib/opencode";
+import { ProviderLogo } from "./ProviderLogo";
 
 type ModelRowExpandedProps = {
-  model: DerivedModel
-  showIncompleteWarning: boolean
-}
+  model: DerivedModel;
+  showIncompleteWarning: boolean;
+};
 
 function formatValue(value: number | null): string {
   if (value == null || Number.isNaN(value)) {
-    return 'n/a'
+    return "n/a";
   }
 
-  return Intl.NumberFormat().format(value)
+  return Intl.NumberFormat().format(value);
 }
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return new Date(iso).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   } catch {
-    return iso
+    return iso;
   }
 }
 
 function formatBoolean(value: boolean | null): string {
   if (value == null) {
-    return 'n/a'
+    return "n/a";
   }
 
-  return value ? 'Yes' : 'No'
+  return value ? "Yes" : "No";
 }
 
 function formatJson(model: DerivedModel): string {
-  return JSON.stringify(model.raw, null, 2)
+  return JSON.stringify(model.raw, null, 2);
 }
 
 const PRICING_LABELS: Array<{ key: keyof OpenRouterPricing; label: string }> = [
-  { key: 'prompt', label: 'Prompt' },
-  { key: 'completion', label: 'Completion' },
-  { key: 'request', label: 'Request' },
-  { key: 'image', label: 'Image' },
-  { key: 'image_token', label: 'Image token' },
-  { key: 'image_output', label: 'Image output' },
-  { key: 'audio', label: 'Audio' },
-  { key: 'audio_output', label: 'Audio output' },
-  { key: 'input_audio_cache', label: 'Audio cache' },
-  { key: 'web_search', label: 'Web search' },
-  { key: 'internal_reasoning', label: 'Internal reasoning' },
-  { key: 'input_cache_read', label: 'Cache read' },
-  { key: 'input_cache_write', label: 'Cache write' },
-  { key: 'discount', label: 'Discount' },
-]
+  { key: "prompt", label: "Prompt" },
+  { key: "completion", label: "Completion" },
+  { key: "request", label: "Request" },
+  { key: "image", label: "Image" },
+  { key: "image_token", label: "Image token" },
+  { key: "image_output", label: "Image output" },
+  { key: "audio", label: "Audio" },
+  { key: "audio_output", label: "Audio output" },
+  { key: "input_audio_cache", label: "Audio cache" },
+  { key: "web_search", label: "Web search" },
+  { key: "internal_reasoning", label: "Internal reasoning" },
+  { key: "input_cache_read", label: "Cache read" },
+  { key: "input_cache_write", label: "Cache write" },
+  { key: "discount", label: "Discount" },
+];
 
 export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpandedProps) {
-  const [copied, setCopied] = useState(false)
-  const [configCopied, setConfigCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
+  const [configCopied, setConfigCopied] = useState(false);
 
   const handleCopyJson = async () => {
-    const json = formatJson(model)
+    const json = formatJson(model);
 
     try {
-      await navigator.clipboard.writeText(json)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      setCopied(false)
+      setCopied(false);
     }
-  }
+  };
 
-  const pricingEntries = PRICING_LABELS.filter(
-    ({ key }) => model.raw.pricing[key] != null,
-  )
+  const pricingEntries = PRICING_LABELS.filter(({ key }) => model.raw.pricing[key] != null);
 
-  const defaultParams = model.raw.default_parameters ?? {}
-  const paramEntries = Object.entries(defaultParams).filter(([, v]) => v != null)
+  const defaultParams = model.raw.default_parameters ?? {};
+  const paramEntries = Object.entries(defaultParams).filter(([, v]) => v != null);
 
   return (
     <div className="expanded-panel">
       <div className="expanded-top">
-        <p className="expanded-description">{model.description || 'No description provided by OpenRouter.'}</p>
+        <p className="expanded-description">
+          {model.description || "No description provided by OpenRouter."}
+        </p>
         {showIncompleteWarning && !model.isProviderReady ? (
           <p className="warning-inline">Incomplete provider token limits in upstream metadata.</p>
         ) : null}
@@ -107,7 +107,7 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           </div>
           <div>
             <dt>Provider</dt>
-            <dd className={model.providerId ? undefined : 'dd-dim'}>
+            <dd className={model.providerId ? undefined : "dd-dim"}>
               {model.providerId ? (
                 model.providerLogoUrl ? (
                   <span className="provider-detail">
@@ -122,13 +122,15 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
                   <span className="provider-detail">{model.providerId}</span>
                 )
               ) : (
-                'n/a'
+                "n/a"
               )}
             </dd>
           </div>
           <div>
             <dt>Hugging Face ID</dt>
-            <dd className={model.raw.hugging_face_id ? undefined : 'dd-dim'}>{model.raw.hugging_face_id ?? 'n/a'}</dd>
+            <dd className={model.raw.hugging_face_id ? undefined : "dd-dim"}>
+              {model.raw.hugging_face_id ?? "n/a"}
+            </dd>
           </div>
           <div>
             <dt>Created</dt>
@@ -136,7 +138,9 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           </div>
           <div>
             <dt>Expiration date</dt>
-            <dd className={model.expirationDate ? undefined : 'dd-dim'}>{model.expirationDate ?? 'None'}</dd>
+            <dd className={model.expirationDate ? undefined : "dd-dim"}>
+              {model.expirationDate ?? "None"}
+            </dd>
           </div>
         </dl>
       </div>
@@ -160,11 +164,13 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           </div>
           <div>
             <dt>Max completion tokens</dt>
-            <dd className={model.maxCompletionTokens != null ? undefined : 'dd-dim'}>{formatValue(model.maxCompletionTokens)}</dd>
+            <dd className={model.maxCompletionTokens != null ? undefined : "dd-dim"}>
+              {formatValue(model.maxCompletionTokens)}
+            </dd>
           </div>
           <div>
             <dt>Moderated</dt>
-            <dd>{model.moderated ? 'Yes' : 'No'}</dd>
+            <dd>{model.moderated ? "Yes" : "No"}</dd>
           </div>
           <div>
             <dt>Tokenizer</dt>
@@ -172,20 +178,26 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           </div>
           <div>
             <dt>Instruct type</dt>
-            <dd className={model.instructType ? undefined : 'dd-dim'}>{model.instructType ?? 'None'}</dd>
+            <dd className={model.instructType ? undefined : "dd-dim"}>
+              {model.instructType ?? "None"}
+            </dd>
           </div>
           <div>
             <dt>Per-request prompt limit</dt>
-            <dd className={model.raw.per_request_limits?.prompt_tokens ? undefined : 'dd-dim'}>{String(model.raw.per_request_limits?.prompt_tokens ?? 'n/a')}</dd>
+            <dd className={model.raw.per_request_limits?.prompt_tokens ? undefined : "dd-dim"}>
+              {String(model.raw.per_request_limits?.prompt_tokens ?? "n/a")}
+            </dd>
           </div>
           <div>
             <dt>Per-request completion limit</dt>
-            <dd className={model.raw.per_request_limits?.completion_tokens ? undefined : 'dd-dim'}>{String(model.raw.per_request_limits?.completion_tokens ?? 'n/a')}</dd>
+            <dd className={model.raw.per_request_limits?.completion_tokens ? undefined : "dd-dim"}>
+              {String(model.raw.per_request_limits?.completion_tokens ?? "n/a")}
+            </dd>
           </div>
           {paramEntries.length > 0 ? (
             paramEntries.map(([key, val]) => (
               <div key={key}>
-                <dt>Default: {key.replace(/_/g, ' ')}</dt>
+                <dt>Default: {key.replace(/_/g, " ")}</dt>
                 <dd className="dd-dim">{String(val)}</dd>
               </div>
             ))
@@ -222,59 +234,75 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
         <dl className="expanded-grid">
           <div>
             <dt>Primary modality</dt>
-            <dd>{model.modality ?? 'n/a'}</dd>
+            <dd>{model.modality ?? "n/a"}</dd>
           </div>
           <div>
             <dt>Input modalities</dt>
-            <dd>{model.inputModalities.join(', ') || 'n/a'}</dd>
+            <dd>{model.inputModalities.join(", ") || "n/a"}</dd>
           </div>
           <div>
             <dt>Output modalities</dt>
-            <dd>{model.outputModalities.join(', ') || 'n/a'}</dd>
+            <dd>{model.outputModalities.join(", ") || "n/a"}</dd>
           </div>
           <div>
             <dt>Supported parameters</dt>
-            <dd>{model.supportedParameters.join(', ') || 'n/a'}</dd>
+            <dd>{model.supportedParameters.join(", ") || "n/a"}</dd>
           </div>
           <div>
             <dt>Family</dt>
-            <dd className={model.family ? undefined : 'dd-dim'}>{model.family ?? 'n/a'}</dd>
+            <dd className={model.family ? undefined : "dd-dim"}>{model.family ?? "n/a"}</dd>
           </div>
           <div>
             <dt>Knowledge cutoff</dt>
-            <dd className={model.knowledge ? undefined : 'dd-dim'}>{model.knowledge ?? 'n/a'}</dd>
+            <dd className={model.knowledge ? undefined : "dd-dim"}>{model.knowledge ?? "n/a"}</dd>
           </div>
           <div>
             <dt>Release date</dt>
-            <dd className={model.releaseDate ? undefined : 'dd-dim'}>{model.releaseDate ?? 'n/a'}</dd>
+            <dd className={model.releaseDate ? undefined : "dd-dim"}>
+              {model.releaseDate ?? "n/a"}
+            </dd>
           </div>
           <div>
             <dt>Last updated</dt>
-            <dd className={model.lastUpdated ? undefined : 'dd-dim'}>{model.lastUpdated ?? 'n/a'}</dd>
+            <dd className={model.lastUpdated ? undefined : "dd-dim"}>
+              {model.lastUpdated ?? "n/a"}
+            </dd>
           </div>
           <div>
             <dt>Attachments</dt>
-            <dd className={model.attachment == null ? 'dd-dim' : undefined}>{formatBoolean(model.attachment)}</dd>
+            <dd className={model.attachment == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.attachment)}
+            </dd>
           </div>
           <div>
             <dt>Reasoning</dt>
-            <dd className={model.reasoning == null ? 'dd-dim' : undefined}>{formatBoolean(model.reasoning)}</dd>
+            <dd className={model.reasoning == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.reasoning)}
+            </dd>
           </div>
           <div>
             <dt>Tool calls</dt>
-            <dd className={model.toolCall == null ? 'dd-dim' : undefined}>{formatBoolean(model.toolCall)}</dd>
+            <dd className={model.toolCall == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.toolCall)}
+            </dd>
           </div>
           <div>
             <dt>Structured output</dt>
-            <dd className={model.structuredOutput == null ? 'dd-dim' : undefined}>{formatBoolean(model.structuredOutput)}</dd>
+            <dd className={model.structuredOutput == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.structuredOutput)}
+            </dd>
           </div>
           <div>
             <dt>Temperature</dt>
-            <dd className={model.temperature == null ? 'dd-dim' : undefined}>{formatBoolean(model.temperature)}</dd>
+            <dd className={model.temperature == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.temperature)}
+            </dd>
           </div>
           <div>
             <dt>Open weights</dt>
-            <dd className={model.openWeights == null ? 'dd-dim' : undefined}>{formatBoolean(model.openWeights)}</dd>
+            <dd className={model.openWeights == null ? "dd-dim" : undefined}>
+              {formatBoolean(model.openWeights)}
+            </dd>
           </div>
         </dl>
       </div>
@@ -287,13 +315,15 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
             className="button button-small"
             onClick={async () => {
               try {
-                await navigator.clipboard.writeText(formatModelConfigSnippet(model))
-                setConfigCopied(true)
-                window.setTimeout(() => setConfigCopied(false), 1600)
-              } catch { /* noop */ }
+                await navigator.clipboard.writeText(formatModelConfigSnippet(model));
+                setConfigCopied(true);
+                window.setTimeout(() => setConfigCopied(false), 1600);
+              } catch {
+                /* noop */
+              }
             }}
           >
-            {configCopied ? 'Copied' : 'Copy Config'}
+            {configCopied ? "Copied" : "Copy Config"}
           </button>
         </div>
         <pre className="json-preview" aria-label={`OpenCode config for ${model.id}`}>
@@ -305,7 +335,7 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
         <summary>Raw JSON</summary>
         <div className="json-details-toolbar">
           <button type="button" className="button button-small" onClick={handleCopyJson}>
-            {copied ? 'Copied' : 'Copy JSON'}
+            {copied ? "Copied" : "Copy JSON"}
           </button>
         </div>
         <pre className="json-preview" aria-label={`Raw JSON for ${model.id}`}>
@@ -313,5 +343,5 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
         </pre>
       </details>
     </div>
-  )
+  );
 }

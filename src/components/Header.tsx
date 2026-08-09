@@ -66,11 +66,7 @@ export function Header({
         >
           {theme === "dark" ? "Light" : "Dark"}
         </button>
-        <button
-          type="button"
-          onClick={onRefresh}
-          className="button button-small"
-        >
+        <button type="button" onClick={onRefresh} className="button button-small">
           Refresh
         </button>
       </div>
