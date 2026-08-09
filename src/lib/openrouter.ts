@@ -149,6 +149,7 @@ export function mergeModelSources(
   const modelsDevModels = getModelsDevOpenRouterModels(modelsDev)
 
   if (!orca) {
+    if (!or) return undefined
     return {
       data: or.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
     }
