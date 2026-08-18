@@ -1,10 +1,13 @@
-import type {
-  ExplorerState,
-  PricingFilter,
-  ProviderMode,
-  SortDirection,
-  SortKey,
-} from "../types/explorer";
+import type { ExplorerState, ProviderMode, SortDirection, SortKey } from "../types/explorer";
+import {
+  parseEnum,
+  VALID_EXPIRY_MODES,
+  VALID_MODERATED,
+  VALID_PRICING_FILTERS,
+  VALID_PROVIDER_MODES,
+  VALID_SORT_DIRECTIONS,
+  VALID_SORT_KEYS,
+} from "../lib/urlState";
 import { FilterGroup } from "./FilterGroup";
 
 type Facets = {
@@ -95,7 +98,15 @@ export function FilterPanel({
           <span>Pricing</span>
           <select
             value={state.pricingFilter}
-            onChange={(event) => onUpdate({ pricingFilter: event.target.value as PricingFilter })}
+            onChange={(event) =>
+              onUpdate({
+                pricingFilter: parseEnum(
+                  event.target.value,
+                  VALID_PRICING_FILTERS,
+                  state.pricingFilter,
+                ),
+              })
+            }
             aria-label="Pricing filter"
           >
             <option value="free">Free only</option>
@@ -107,7 +118,11 @@ export function FilterPanel({
           <span>Provider mode</span>
           <select
             value={state.providerMode}
-            onChange={(event) => onProviderModeChange(event.target.value as ProviderMode)}
+            onChange={(event) =>
+              onProviderModeChange(
+                parseEnum(event.target.value, VALID_PROVIDER_MODES, state.providerMode),
+              )
+            }
             aria-label="Provider readiness mode"
           >
             <option value="include_incomplete">Include incomplete</option>
@@ -119,7 +134,9 @@ export function FilterPanel({
           <span>Sort</span>
           <select
             value={state.sortKey}
-            onChange={(event) => onUpdate({ sortKey: event.target.value as SortKey })}
+            onChange={(event) =>
+              onUpdate({ sortKey: parseEnum(event.target.value, VALID_SORT_KEYS, state.sortKey) })
+            }
             aria-label="Sort key"
           >
             {SORT_KEY_OPTIONS.map((option) => (
@@ -134,7 +151,15 @@ export function FilterPanel({
           <span>Direction</span>
           <select
             value={state.sortDirection}
-            onChange={(event) => onUpdate({ sortDirection: event.target.value as SortDirection })}
+            onChange={(event) =>
+              onUpdate({
+                sortDirection: parseEnum(
+                  event.target.value,
+                  VALID_SORT_DIRECTIONS,
+                  state.sortDirection,
+                ),
+              })
+            }
             aria-label="Sort direction"
           >
             {SORT_DIRECTION_OPTIONS.map((option) => (
@@ -150,7 +175,9 @@ export function FilterPanel({
           <select
             value={state.moderated}
             onChange={(event) =>
-              onUpdate({ moderated: event.target.value as ExplorerState["moderated"] })
+              onUpdate({
+                moderated: parseEnum(event.target.value, VALID_MODERATED, state.moderated),
+              })
             }
             aria-label="Moderation filter"
           >
@@ -165,7 +192,9 @@ export function FilterPanel({
           <select
             value={state.expiryMode}
             onChange={(event) =>
-              onUpdate({ expiryMode: event.target.value as ExplorerState["expiryMode"] })
+              onUpdate({
+                expiryMode: parseEnum(event.target.value, VALID_EXPIRY_MODES, state.expiryMode),
+              })
             }
             aria-label="Expiration filter"
           >

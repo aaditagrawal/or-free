@@ -7,6 +7,7 @@ import type {
   SortDirection,
   SortKey,
 } from "../types/explorer";
+import { cssVars } from "../lib/cssVars";
 import { ModelRowExpanded } from "./ModelRowExpanded";
 import { ProviderLogo } from "./ProviderLogo";
 
@@ -79,7 +80,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-const MODALITY_ICON: Record<string, ReactElement> = {
+const MODALITY_ICON = {
   // Paragraph lines — the universal "text" glyph, not a letterform
   text: (
     <svg
@@ -150,7 +151,13 @@ const MODALITY_ICON: Record<string, ReactElement> = {
       <path d="M9 2.5v3h3" />
     </svg>
   ),
-};
+} satisfies Record<string, ReactElement>;
+
+type ModalityKind = keyof typeof MODALITY_ICON;
+
+function isModalityKind(kind: string): kind is ModalityKind {
+  return kind in MODALITY_ICON;
+}
 
 function ModalityDots({ modalities }: { modalities: string[] }) {
   if (modalities.length === 0) return <span className="dim">—</span>;
@@ -158,7 +165,9 @@ function ModalityDots({ modalities }: { modalities: string[] }) {
     <span className="modality-row">
       {modalities.map((m) => {
         const kind = m.toLowerCase();
-        const icon = MODALITY_ICON[kind] ?? (
+        const icon = isModalityKind(kind) ? (
+          MODALITY_ICON[kind]
+        ) : (
           <span aria-hidden className="modality-letter">
             {m.slice(0, 1).toUpperCase()}
           </span>
@@ -330,10 +339,7 @@ export function ModelsTable({
                     <td data-label="Context" className="num">
                       <div className="ctxbar">
                         <span className="ctxbar-track" aria-hidden>
-                          <span
-                            className="ctxbar-fill"
-                            style={{ ["--w" as string]: `${ctxPct}%` }}
-                          />
+                          <span className="ctxbar-fill" style={cssVars({ "--w": `${ctxPct}%` })} />
                         </span>
                         <span className="ctxbar-value">{formatCompact(model.contextLength)}</span>
                       </div>

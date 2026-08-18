@@ -18,49 +18,42 @@ function cacheKey(source: Source) {
   return `or-free:models-cache:${source}:v1`;
 }
 
-function hasOpenRouterModelsResponse(value: unknown): value is OpenRouterModelsResponse {
-  return Boolean(
-    value && typeof value === "object" && "data" in value && Array.isArray(value.data),
-  );
+// The cached JSON is only as trustworthy as whatever last wrote it, so each
+// decoder re-checks the one structural invariant the readers actually rely on
+// and rejects the entry outright when it no longer holds.
+function decodeOpenRouterModelsResponse(
+  value: OpenRouterModelsResponse | null,
+): OpenRouterModelsResponse | null {
+  return Array.isArray(value?.data) ? value : null;
 }
 
-function hasModelsDevResponse(value: unknown): value is ModelsDevResponse {
-  return Boolean(
-    value &&
-    typeof value === "object" &&
-    "openrouter" in value &&
-    value.openrouter &&
-    typeof value.openrouter === "object" &&
-    "models" in value.openrouter,
-  );
+function decodeModelsDevResponse(value: ModelsDevResponse | null): ModelsDevResponse | null {
+  return value?.openrouter?.models ? value : null;
 }
 
 function readCache<TPayload>(
   source: Source,
-  hasPayload: (value: unknown) => value is TPayload,
+  decodePayload: (value: TPayload | null) => TPayload | null,
 ): Cached<TPayload> | null {
-  if (typeof window === "undefined") return null;
+  if (!globalThis.window) return null;
   try {
     const raw = window.localStorage.getItem(cacheKey(source));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Cached<unknown>;
-    if (!hasPayload(parsed?.payload)) return null;
-    if (
-      typeof parsed.savedAt !== "number" ||
-      !Number.isFinite(parsed.savedAt) ||
-      parsed.savedAt < 0
-    ) {
-      return null;
-    }
+    const parsed: Cached<TPayload> | null = JSON.parse(raw);
+    if (!parsed) return null;
+    const payload = decodePayload(parsed.payload ?? null);
+    if (!payload) return null;
+    // Number.isFinite does not coerce, so a corrupted non-numeric savedAt fails here too.
+    if (!Number.isFinite(parsed.savedAt) || parsed.savedAt < 0) return null;
     if (Date.now() - parsed.savedAt > CACHE_MAX_AGE_MS) return null;
-    return { payload: parsed.payload, savedAt: parsed.savedAt };
+    return { payload, savedAt: parsed.savedAt };
   } catch {
     return null;
   }
 }
 
 function writeCache<TPayload>(source: Source, payload: TPayload): void {
-  if (typeof window === "undefined") return;
+  if (!globalThis.window) return;
   try {
     window.localStorage.setItem(
       cacheKey(source),
@@ -96,9 +89,9 @@ async function fetchAndCacheModelsDev(signal?: AbortSignal) {
 // the other sources merge in progressively when they land.
 export function useModels() {
   const [initialCaches] = useState(() => ({
-    or: readCache("or", hasOpenRouterModelsResponse),
-    orca: readCache("orca", hasOpenRouterModelsResponse),
-    modelsDev: readCache("models-dev", hasModelsDevResponse),
+    or: readCache("or", decodeOpenRouterModelsResponse),
+    orca: readCache("orca", decodeOpenRouterModelsResponse),
+    modelsDev: readCache("models-dev", decodeModelsDevResponse),
   }));
 
   const orInitial = initialCaches.or;

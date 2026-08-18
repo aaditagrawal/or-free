@@ -1,25 +1,23 @@
 import type { DerivedModel, PricingFilter, ProviderMode } from "../types/explorer";
-import type { OpenRouterModel } from "../types/openrouter";
+import type { NumericLike, OpenRouterModel } from "../types/openrouter";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const MODELS_DEV_LOGO_BASE_URL = "https://models.dev/logos";
 
-export function toNumber(value: unknown): number {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : Number.NaN;
+export function toNumber(value: NumericLike | null | undefined): number {
+  if (value == null) {
+    return Number.NaN;
   }
 
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (trimmed.length === 0) {
-      return Number.NaN;
-    }
-
-    const parsed = Number(trimmed);
-    return Number.isFinite(parsed) ? parsed : Number.NaN;
+  // Numbers round-trip exactly through String(), so the string path covers
+  // both representations: "" / "abc" / "Infinity" all fall out as NaN.
+  const trimmed = String(value).trim();
+  if (trimmed.length === 0) {
+    return Number.NaN;
   }
 
-  return Number.NaN;
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 export function getUtcDateStamp(date = new Date()): string {

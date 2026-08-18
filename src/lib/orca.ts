@@ -209,7 +209,7 @@ export async function fetchOrcaModels(signal?: AbortSignal): Promise<OpenRouterM
     throw new Error(`ORCA request failed (${response.status})`);
   }
 
-  const payload = (await response.json()) as OrcaResponse;
+  const payload: OrcaResponse = await response.json();
 
   if (!payload || !Array.isArray(payload.models)) {
     throw new Error("ORCA payload missing model list");
