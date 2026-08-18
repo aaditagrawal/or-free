@@ -24,7 +24,7 @@ export async function fetchOpenRouterModels(
     throw new Error(`OpenRouter request failed (${response.status})`);
   }
 
-  const payload = (await response.json()) as OpenRouterModelsResponse;
+  const payload: OpenRouterModelsResponse = await response.json();
 
   if (!payload || !Array.isArray(payload.data)) {
     throw new Error("OpenRouter payload missing model list");
@@ -44,9 +44,9 @@ export async function fetchModelsDev(signal?: AbortSignal): Promise<ModelsDevRes
     throw new Error(`models.dev request failed (${response.status})`);
   }
 
-  const payload = (await response.json()) as ModelsDevResponse;
+  const payload: ModelsDevResponse = await response.json();
 
-  if (!payload || typeof payload !== "object" || !payload.openrouter?.models) {
+  if (!payload?.openrouter?.models) {
     throw new Error("models.dev payload missing OpenRouter model map");
   }
 
@@ -64,10 +64,6 @@ export function fetchModels(signal?: AbortSignal): Promise<OpenRouterModelsRespo
 
 function getModelsDevOpenRouterModels(modelsDev: ModelsDevResponse | undefined) {
   return modelsDev?.openrouter?.models;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 function joinModalities(input: string[], output: string[]): string | null {
@@ -107,10 +103,10 @@ function enrichModelWithModelsDev(
     return model;
   }
 
-  const inputModalities = isStringArray(modelsDevModel.modalities?.input)
+  const inputModalities = Array.isArray(modelsDevModel.modalities?.input)
     ? modelsDevModel.modalities.input
     : model.architecture.input_modalities;
-  const outputModalities = isStringArray(modelsDevModel.modalities?.output)
+  const outputModalities = Array.isArray(modelsDevModel.modalities?.output)
     ? modelsDevModel.modalities.output
     : model.architecture.output_modalities;
   const contextLength = modelsDevModel.limit?.context ?? model.context_length;

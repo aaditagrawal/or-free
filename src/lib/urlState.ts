@@ -69,20 +69,18 @@ function parseNullableNumber(value: string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseEnum<T extends string>(value: string | null, allowed: readonly T[], fallback: T): T {
-  if (value && allowed.includes(value as T)) {
-    return value as T;
-  }
-
-  return fallback;
+// Narrowing by lookup rather than by assertion: `find` already returns `T | undefined`,
+// so the allowed list is the only thing that can produce a value of type `T`.
+export function parseEnum<T extends string>(
+  value: string | null,
+  allowed: readonly T[],
+  fallback: T,
+): T {
+  return allowed.find((candidate) => candidate === value) ?? fallback;
 }
 
 export function parseProviderMode(value: string | null): ProviderMode | null {
-  if (!value) {
-    return null;
-  }
-
-  return VALID_PROVIDER_MODES.includes(value as ProviderMode) ? (value as ProviderMode) : null;
+  return VALID_PROVIDER_MODES.find((mode) => mode === value) ?? null;
 }
 
 function parseDate(value: string | null): string | null {

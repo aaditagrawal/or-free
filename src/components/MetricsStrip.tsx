@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { cssVars } from "../lib/cssVars";
 import type { DerivedModel } from "../types/explorer";
 
 type MetricsStripProps = {
@@ -18,7 +19,7 @@ const CONTEXT_BUCKETS: Array<{ label: string; max: number }> = [
 ];
 
 function bucketContextLengths(models: DerivedModel[]): number[] {
-  const counts = new Array(CONTEXT_BUCKETS.length).fill(0) as number[];
+  const counts: number[] = Array.from({ length: CONTEXT_BUCKETS.length }, () => 0);
 
   for (const model of models) {
     const ctx = model.contextLength;
@@ -98,8 +99,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
 
   const medianContext = useMemo(() => {
     const values = visible
-      .map((m) => m.contextLength)
-      .filter((v): v is number => typeof v === "number" && v > 0)
+      .flatMap((m) => (m.contextLength !== null && m.contextLength > 0 ? [m.contextLength] : []))
       .sort((a, b) => a - b);
     if (values.length === 0) return null;
     const mid = Math.floor(values.length / 2);
@@ -116,7 +116,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
         </div>
         <div
           className="sparkbars"
-          style={{ ["--cols" as string]: CONTEXT_BUCKETS.length }}
+          style={cssVars({ "--cols": CONTEXT_BUCKETS.length })}
           role="img"
           aria-label="Context length histogram"
         >
@@ -154,7 +154,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
                 <span className="rankbar-track">
                   <span
                     className="rankbar-fill"
-                    style={{ ["--w" as string]: `${(p.count / providersMax) * 100}%` }}
+                    style={cssVars({ "--w": `${(p.count / providersMax) * 100}%` })}
                   />
                 </span>
                 <span className="rankbar-count">{p.count}</span>
@@ -201,11 +201,11 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
           <div className="gauge-track">
             <div
               className="gauge-fill"
-              style={{
-                ["--w" as string]: expiration.nearest
+              style={cssVars({
+                "--w": expiration.nearest
                   ? `${Math.max(4, 100 - Math.min(100, (expiration.nearest.days / 90) * 100))}%`
                   : "0%",
-              }}
+              })}
             />
           </div>
           <div className="gauge-ticks">
