@@ -125,6 +125,57 @@ describe("ModelsTable", () => {
     expect(screen.getByRole("button", { name: /Copy JSON/i })).not.toBeNull();
   });
 
+  it("links truncated descriptions to the full OpenRouter model page", async () => {
+    const user = userEvent.setup();
+    const model = toDerivedModel(
+      buildModel({
+        id: "provider/model:free",
+        description: "A useful model with more details...",
+      }),
+      "2026-02-09",
+    );
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Details/i }));
+
+    const link = screen.getByRole("link", { name: "Read full description" });
+    expect(link.getAttribute("href")).toBe("https://openrouter.ai/provider/model%3Afree");
+    expect(link.getAttribute("target")).toBe("_blank");
+  });
+
+  it("does not show a read-more link for complete descriptions", async () => {
+    const user = userEvent.setup();
+    const model = toDerivedModel(
+      buildModel({ description: "A complete model description." }),
+      "2026-02-09",
+    );
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Details/i }));
+
+    expect(screen.queryByRole("link", { name: "Read full description" })).toBeNull();
+  });
+
   it("shows the provider logo for OpenRouter-style model ids", async () => {
     const model = toDerivedModel(buildModel({ id: "anthropic/claude-haiku" }), "2026-02-09");
 

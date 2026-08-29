@@ -41,6 +41,15 @@ function formatJson(model: DerivedModel): string {
   return JSON.stringify(model.raw, null, 2);
 }
 
+function isTruncatedDescription(description: string): boolean {
+  return /(?:\.{3}|…)$/.test(description.trim());
+}
+
+function getOpenRouterModelUrl(modelId: string): string {
+  const encodedId = modelId.split("/").map(encodeURIComponent).join("/");
+  return `https://openrouter.ai/${encodedId}`;
+}
+
 const PRICING_LABELS: Array<{ key: keyof OpenRouterPricing; label: string }> = [
   { key: "prompt", label: "Prompt" },
   { key: "completion", label: "Completion" },
@@ -78,12 +87,26 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
 
   const defaultParams = model.raw.default_parameters ?? {};
   const paramEntries = Object.entries(defaultParams).filter(([, v]) => v != null);
+  const hasTruncatedDescription = isTruncatedDescription(model.description);
 
   return (
     <div className="expanded-panel">
       <div className="expanded-top">
         <p className="expanded-description">
           {model.description || "No description provided by OpenRouter."}
+          {hasTruncatedDescription ? (
+            <>
+              {" "}
+              <a
+                className="description-read-more"
+                href={getOpenRouterModelUrl(model.id)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Read full description
+              </a>
+            </>
+          ) : null}
         </p>
         {showIncompleteWarning && !model.isProviderReady ? (
           <p className="warning-inline">Incomplete provider token limits in upstream metadata.</p>
