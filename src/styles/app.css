@@ -145,6 +145,7 @@
 
 .sparkbar {
   background: var(--chart-neutral);
+  height: var(--h, 0%);
   min-height: 2px;
   transition: background 120ms ease;
 }
@@ -211,7 +212,7 @@
   overflow: hidden;
 }
 
-.splitbar-seg { height: 100%; }
+.splitbar-seg { height: 100%; width: var(--w, 0%); }
 .splitbar-seg.free { background: var(--accent); }
 .splitbar-seg.paid { background: var(--chart-neutral-strong); }
 
@@ -608,6 +609,8 @@ th {
   color: var(--text-strong);
   white-space: nowrap;
 }
+
+.th-actions { width: 72px; }
 
 .dim { color: var(--text-dim); }
 

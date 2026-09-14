@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Fragment, useCallback, useMemo, useState, type ReactElement } from 'react'
+import { Fragment, useCallback, useMemo, useState, type CSSProperties, type ReactElement } from 'react'
 import type { DerivedModel, PricingFilter, ProviderMode, SortDirection, SortKey } from '../types/explorer'
 import { ModelRowExpanded } from './ModelRowExpanded'
 import { ProviderLogo } from './ProviderLogo'
@@ -169,7 +169,7 @@ export function ModelsTable({
         <table>
           <thead>
             <tr>
-              <th style={{ width: 72 }}>Row</th>
+              <th className="th-actions">Row</th>
               {SORTABLE_HEADERS.map((header) => {
                 const active = header.key === sortKey
                 const direction = active ? sortDirection : null
@@ -270,7 +270,7 @@ export function ModelsTable({
                         <span className="ctxbar-track" aria-hidden>
                           <span
                             className="ctxbar-fill"
-                            style={{ ['--w' as string]: `${ctxPct}%` }}
+                            style={{ '--w': `${ctxPct}%` } as CSSProperties}
                           />
                         </span>
                         <span className="ctxbar-value">{formatCompact(model.contextLength)}</span>

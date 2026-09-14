@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["@shadcn/lint"],
+  "ignorePatterns": ["dist/**", "coverage/**", "public/**"],
+  "rules": {
+    // This project is not a Tailwind design system: every className is a
+    // hand-authored global CSS class defined in src/styles/app.css (e.g.
+    // .nav-bar, .chip, .panel, .ctxbar-fill, .status-pill). With no Tailwind
+    // theme to resolve against, no-unknown-classes flags all ~281 real
+    // classes as "unknown", so it is disabled here.
+    "shadcn/no-unknown-classes": "off",
+    "shadcn/no-restyle": "error",
+    "shadcn/no-raw-colors": "error",
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "error",
+    "shadcn/require-static-classes": "error"
+  }
+}
