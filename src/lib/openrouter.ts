@@ -145,18 +145,18 @@ export function mergeModelSources(
   orca: OpenRouterModelsResponse | undefined,
   modelsDev?: ModelsDevResponse,
 ): OpenRouterModelsResponse | undefined {
-  if (!or && !orca) return undefined
   const modelsDevModels = getModelsDevOpenRouterModels(modelsDev)
+
+  if (!or) {
+    if (!orca) return undefined
+    return {
+      data: orca.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
+    }
+  }
 
   if (!orca) {
     return {
       data: or.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
-    }
-  }
-
-  if (!or) {
-    return {
-      data: orca.data.map((model) => enrichModelWithModelsDev(model, modelsDevModels?.[model.id])),
     }
   }
 
