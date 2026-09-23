@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import type { DerivedModel } from '../types/explorer'
 
 type MetricsStripProps = {
@@ -116,7 +116,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
         </div>
         <div
           className="sparkbars"
-          style={{ ['--cols' as string]: CONTEXT_BUCKETS.length }}
+          style={{ '--cols': CONTEXT_BUCKETS.length } as CSSProperties}
           role="img"
           aria-label="Context length histogram"
         >
@@ -127,7 +127,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
                 key={CONTEXT_BUCKETS[idx].label}
                 className={isPeak ? 'sparkbar is-peak' : 'sparkbar'}
                 title={`${CONTEXT_BUCKETS[idx].label}: ${count} models`}
-                style={{ height: `${Math.max(count ? 8 : 0, (count / histogramMax) * 100)}%` }}
+                style={{ '--h': `${Math.max(count ? 8 : 0, (count / histogramMax) * 100)}%` } as CSSProperties}
               />
             )
           })}
@@ -154,7 +154,7 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
                 <span className="rankbar-track">
                   <span
                     className="rankbar-fill"
-                    style={{ ['--w' as string]: `${(p.count / providersMax) * 100}%` }}
+                    style={{ '--w': `${(p.count / providersMax) * 100}%` } as CSSProperties}
                   />
                 </span>
                 <span className="rankbar-count">{p.count}</span>
@@ -171,8 +171,14 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
           <span className="metric-sub">{pricing.total} active</span>
         </div>
         <div className="splitbar" role="img" aria-label="Free vs paid">
-          <div className="splitbar-seg free" style={{ width: `${pricing.freePct}%` }} />
-          <div className="splitbar-seg paid" style={{ width: `${pricing.paidPct}%` }} />
+          <div
+            className="splitbar-seg free"
+            style={{ '--w': `${pricing.freePct}%` } as CSSProperties}
+          />
+          <div
+            className="splitbar-seg paid"
+            style={{ '--w': `${pricing.paidPct}%` } as CSSProperties}
+          />
         </div>
         <div className="splitbar-legend">
           <span>
@@ -199,11 +205,13 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
           <div className="gauge-track">
             <div
               className="gauge-fill"
-              style={{
-                ['--w' as string]: expiration.nearest
-                  ? `${Math.max(4, 100 - Math.min(100, (expiration.nearest.days / 90) * 100))}%`
-                  : '0%',
-              }}
+              style={
+                {
+                  '--w': expiration.nearest
+                    ? `${Math.max(4, 100 - Math.min(100, (expiration.nearest.days / 90) * 100))}%`
+                    : '0%',
+                } as CSSProperties
+              }
             />
           </div>
           <div className="gauge-ticks">
