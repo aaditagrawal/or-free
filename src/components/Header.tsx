@@ -4,7 +4,6 @@ type HeaderProps = {
   totalCount: number;
   visibleCount: number;
   freeCount: number;
-  providerMode: "strict" | "include_incomplete";
   pricingFilter: PricingFilter;
   lastUpdatedText: string;
   onRefresh: () => void;

@@ -212,11 +212,3 @@ export function getFacets(models: DerivedModel[]) {
     supportedParameters: [...supportedParameters].sort((a, b) => a.localeCompare(b)),
   };
 }
-
-export function formatDate(dateIso: string | null): string {
-  if (!dateIso) {
-    return "None";
-  }
-
-  return dateIso;
-}

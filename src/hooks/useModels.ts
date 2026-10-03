@@ -133,11 +133,12 @@ export function useModels() {
     [orQuery.data, orcaQuery.data, modelsDevQuery.data],
   );
 
-  // Render as soon as either source lands. Loading only while *both* pending.
-  const isLoading = orQuery.isLoading && orcaQuery.isLoading;
+  // A failed source does not finish loading while the fallback is still pending.
+  const hasData = (merged?.data.length ?? 0) > 0;
+  const isLoading = !hasData && (orQuery.isPending || orcaQuery.isPending);
 
   // Error only when both fail — a single-source failure is survivable.
-  const isError = orQuery.isError && orcaQuery.isError;
+  const isError = !hasData && orQuery.isError && orcaQuery.isError;
   const error = isError ? (orQuery.error ?? orcaQuery.error) : null;
 
   const dataUpdatedAt = Math.max(

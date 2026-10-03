@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { buildHash, parseHash } from "../hooks/useHashRouter";
 import type { ExplorerState, ProviderMode } from "../types/explorer";
 import {
@@ -44,8 +44,6 @@ export function useExplorerState(hashSearch: string) {
     buildInitialExplorerState(hashSearch, readStoredProviderMode()),
   );
 
-  const isInternalUpdate = useRef(false);
-
   useEffect(() => {
     const { route } = parseHash(window.location.hash);
     if (route !== "explorer") return;
@@ -54,7 +52,6 @@ export function useExplorerState(hashSearch: string) {
     const nextHash = buildHash("explorer", search ? `?${search}` : undefined);
 
     if (window.location.hash !== nextHash) {
-      isInternalUpdate.current = true;
       window.history.replaceState(null, "", nextHash);
     }
 
@@ -63,11 +60,6 @@ export function useExplorerState(hashSearch: string) {
 
   useEffect(() => {
     const onHashChange = () => {
-      if (isInternalUpdate.current) {
-        isInternalUpdate.current = false;
-        return;
-      }
-
       const { route, search } = parseHash(window.location.hash);
       if (route !== "explorer") return;
 
@@ -128,7 +120,6 @@ export function useExplorerState(hashSearch: string) {
     () => ({
       state,
       update,
-      setState,
       setProviderMode,
       toggleListFilter,
       clearFilters,

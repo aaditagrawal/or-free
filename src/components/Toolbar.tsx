@@ -291,7 +291,6 @@ export function Toolbar({
             options={facets.supportedParameters}
             selected={state.supportedParameters}
             onToggle={(value) => onToggleListFilter("supportedParameters", value)}
-            maxVisible={18}
           />
         </div>
       </details>
