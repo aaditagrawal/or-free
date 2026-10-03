@@ -2,7 +2,6 @@
 
 :root {
   --font-main: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-ui:   'Geist', 'Geist Mono', ui-sans-serif, system-ui, sans-serif;
 
   /* A single, slightly desaturated accent. Used sparingly. */
   --accent: #ED6A3A;
@@ -11,7 +10,6 @@
 
   /* Secondary hue, only for positive/data contrast — muted, not loud */
   --accent-alt: #6EB8A8;
-  --accent-alt-soft: rgba(110, 184, 168, 0.08);
 
   /* Surfaces: slightly warm, never pitch black */
   --bg: #101012;
@@ -37,12 +35,8 @@
 
   /* Chart tokens: neutral-first; accent only for the primary series */
   --chart-track: rgba(255, 255, 255, 0.04);
-  --chart-fill: var(--accent);
-  --chart-fill-dim: rgba(237, 106, 58, 0.35);
   --chart-neutral: #44444a;
   --chart-neutral-strong: #5a5a62;
-  --chart-fill-alt: var(--accent-alt);
-  --chart-grid: #1a1a1e;
 
   /* Rhythm */
   --space-1: 0.35rem;
@@ -51,7 +45,6 @@
   --space-4: 1.5rem;
   --space-5: 2rem;
 
-  --radius-0: 0;
   --hairline: 1px solid var(--border);
 }
 
@@ -60,7 +53,6 @@
   --accent-soft: rgba(211, 90, 46, 0.08);
   --accent-hover: rgba(211, 90, 46, 0.14);
   --accent-alt: #3e9585;
-  --accent-alt-soft: rgba(62, 149, 133, 0.08);
 
   --bg: #f7f6f3;
   --panel: #ffffff;
@@ -81,11 +73,8 @@
   --backdrop: rgba(0, 0, 0, 0.3);
 
   --chart-track: rgba(0, 0, 0, 0.05);
-  --chart-fill: var(--accent);
-  --chart-fill-dim: rgba(211, 90, 46, 0.28);
   --chart-neutral: #c9c6be;
   --chart-neutral-strong: #a8a59c;
-  --chart-grid: #ecebe4;
 }
 
 * { box-sizing: border-box; }

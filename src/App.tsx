@@ -94,6 +94,15 @@ function App() {
             <section className="panel state-panel">
               <h2>Loading models...</h2>
             </section>
+          ) : modelsQuery.isError ? (
+            <section className="panel state-panel">
+              <h2>Unable to load models</h2>
+              <p>
+                {modelsQuery.error instanceof Error
+                  ? modelsQuery.error.message
+                  : "Model sources are unavailable"}
+              </p>
+            </section>
           ) : (
             <ConfigGenerator models={freeAndUnexpired} onBack={() => navigate("explorer")} />
           )}
@@ -109,7 +118,6 @@ function App() {
           totalCount={models.length}
           freeCount={freeAndUnexpired.length}
           visibleCount={filteredModels.length}
-          providerMode={state.providerMode}
           pricingFilter={state.pricingFilter}
           lastUpdatedText={formatUpdatedAt(modelsQuery.dataUpdatedAt)}
           onRefresh={() => void modelsQuery.refetch()}

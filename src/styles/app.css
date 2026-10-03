@@ -782,50 +782,6 @@ tr:hover .copy-button { opacity: 0.55; }
   background: transparent;
 }
 
-.info-icon {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  height: 1em;
-  margin-left: 0.35em;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  font-size: 0.78em;
-  font-style: italic;
-  text-transform: lowercase;
-  line-height: 1;
-  cursor: default;
-  opacity: 0.7;
-  vertical-align: middle;
-}
-
-.info-icon:hover { opacity: 1; }
-
-.info-icon:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.45rem 0.6rem;
-  border: var(--hairline);
-  background: var(--panel);
-  color: var(--text);
-  font-size: 0.66rem;
-  font-style: normal;
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: 1.45;
-  white-space: normal;
-  width: max-content;
-  max-width: 240px;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.row-paid { /* no tint — too busy */ }
 .row-warning { background: rgba(229, 138, 109, 0.04); }
 
 /* Inline context bar (table cell) */
@@ -946,14 +902,6 @@ tr:hover .ctxbar-fill { background: var(--accent); }
 
 .pricing-cell span { font-variant-numeric: tabular-nums; }
 .pricing-cell span:last-child { color: var(--text-dim); }
-
-.status-cell {
-  display: grid;
-  gap: 0.15rem;
-  font-size: 0.7rem;
-}
-
-.status-cell span:last-child { color: var(--text-dim); }
 
 /* Status label — plain text, no dot clutter */
 .status-pill {
@@ -1382,7 +1330,6 @@ tr:hover .ctxbar-fill { background: var(--accent); }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .status-cell { min-width: 9rem; }
 }
 
 @media (max-width: 768px) {
@@ -1462,7 +1409,7 @@ tr:hover .ctxbar-fill { background: var(--accent); }
     letter-spacing: 0;
   }
 
-  .status-cell, .pricing-cell { min-width: 0; }
+  .pricing-cell { min-width: 0; }
   .ctxbar { grid-template-columns: 1fr; }
   .ctxbar-value { text-align: left; }
 
@@ -1491,5 +1438,4 @@ tr:hover .ctxbar-fill { background: var(--accent); }
   input, select, textarea { padding: 0.56rem; font-size: 16px; }
   .button { padding: 0.56rem 0.7rem; }
   .chip { padding: 0.32rem 0.5rem; }
-  .curl-output { min-height: 10rem; font-size: 0.62rem; }
 }
