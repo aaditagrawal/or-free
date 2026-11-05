@@ -1,4 +1,4 @@
-import clsx from 'clsx'
+import { classes } from '../lib/classes'
 import { Fragment, useCallback, useMemo, useState, type CSSProperties, type ReactElement } from 'react'
 import type { DerivedModel, PricingFilter, ProviderMode, SortDirection, SortKey } from '../types/explorer'
 import { ModelRowExpanded } from './ModelRowExpanded'
@@ -177,7 +177,7 @@ export function ModelsTable({
                   <th key={header.key} className={header.key === 'context' || header.key === 'max_completion' ? 'num' : undefined}>
                     <button
                       type="button"
-                      className={clsx(
+                      className={classes(
                         'sort-button',
                         active && 'sort-active',
                         active && (direction === 'asc' ? 'sort-asc' : 'sort-desc'),
@@ -198,7 +198,7 @@ export function ModelsTable({
                 <th className="num">
                   <button
                     type="button"
-                    className={clsx(
+                    className={classes(
                       'sort-button',
                       sortKey === 'prompt_price' && 'sort-active',
                       sortKey === 'prompt_price' && (sortDirection === 'asc' ? 'sort-asc' : 'sort-desc'),
@@ -228,7 +228,7 @@ export function ModelsTable({
 
               return (
                 <Fragment key={model.id}>
-                  <tr className={clsx(showIncompleteWarning && 'row-warning', isPaid && 'row-paid')}>
+                  <tr className={classes(showIncompleteWarning && 'row-warning', isPaid && 'row-paid')}>
                     <td className="td-actions">
                       <button
                         type="button"
@@ -292,7 +292,7 @@ export function ModelsTable({
                       <ModalityDots modalities={model.inputModalities} />
                     </td>
                     <td data-label="Moderation">
-                      <span className={clsx('status-pill', model.moderated && 'on')}>
+                      <span className={classes('status-pill', model.moderated && 'on')}>
                         {model.moderated ? 'moderated' : 'open'}
                       </span>
                     </td>

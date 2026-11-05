@@ -1,4 +1,4 @@
-import clsx from 'clsx'
+import { classes } from '../lib/classes'
 
 type FilterGroupProps = {
   title: string
@@ -32,7 +32,7 @@ export function FilterGroup({
             <button
               key={option}
               type="button"
-              className={clsx('chip', active && 'chip-active')}
+              className={classes('chip', active && 'chip-active')}
               onClick={() => onToggle(option)}
               aria-pressed={active}
             >

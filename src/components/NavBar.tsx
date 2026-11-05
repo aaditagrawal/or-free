@@ -1,4 +1,4 @@
-import clsx from 'clsx'
+import { classes } from '../lib/classes'
 import type { Route } from '../hooks/useHashRouter'
 
 type NavBarProps = {
@@ -11,14 +11,14 @@ export function NavBar({ route, onNavigate }: NavBarProps) {
     <nav className="nav-bar" aria-label="Main navigation">
       <button
         type="button"
-        className={clsx('nav-link', route === 'explorer' && 'nav-link-active')}
+        className={classes('nav-link', route === 'explorer' && 'nav-link-active')}
         onClick={() => onNavigate('explorer')}
       >
         Explorer
       </button>
       <button
         type="button"
-        className={clsx('nav-link', route === 'request' && 'nav-link-active')}
+        className={classes('nav-link', route === 'request' && 'nav-link-active')}
         onClick={() => onNavigate('request')}
       >
         Request
