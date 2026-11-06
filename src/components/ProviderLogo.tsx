@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useResourceData } from '../hooks/useResource'
+import { createResource, type Resource } from '../lib/resource'
 
 type ProviderLogoProps = {
   providerId: string | null
@@ -6,9 +7,10 @@ type ProviderLogoProps = {
   small?: boolean
 }
 
-async function fetchProviderLogo(providerLogoUrl: string): Promise<string> {
+async function fetchProviderLogo(providerLogoUrl: string, signal: AbortSignal): Promise<string> {
   const response = await fetch(providerLogoUrl, {
     headers: { Accept: 'image/svg+xml' },
+    signal,
   })
 
   if (!response.ok) {
@@ -18,15 +20,27 @@ async function fetchProviderLogo(providerLogoUrl: string): Promise<string> {
   return response.text()
 }
 
+const logos = new Map<string, Resource<string>>()
+
+function getLogo(url: string): Resource<string> {
+  let resource = logos.get(url)
+  if (!resource) {
+    resource = createResource({
+      fetch: (signal) => fetchProviderLogo(url, signal),
+      staleTime: 24 * 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      retries: 0,
+      refreshOnFocus: true,
+      cancelOnUnused: false,
+      onUnused: () => logos.delete(url),
+    })
+    logos.set(url, resource)
+  }
+  return resource
+}
+
 export function ProviderLogo({ providerId, providerLogoUrl, small = false }: ProviderLogoProps) {
-  const logoQuery = useQuery({
-    queryKey: ['provider-logo', providerLogoUrl],
-    queryFn: () => fetchProviderLogo(providerLogoUrl ?? ''),
-    enabled: Boolean(providerLogoUrl),
-    staleTime: 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-    retry: false,
-  })
+  const logo = useResourceData(providerLogoUrl ? getLogo(providerLogoUrl) : null)
 
   if (!providerLogoUrl || !providerId) {
     return null
@@ -38,11 +52,11 @@ export function ProviderLogo({ providerId, providerLogoUrl, small = false }: Pro
       role="img"
       aria-label={`${providerId} provider logo`}
     >
-      {logoQuery.data ? (
+      {logo ? (
         <span
           className="provider-logo-svg"
           aria-hidden
-          dangerouslySetInnerHTML={{ __html: logoQuery.data }}
+          dangerouslySetInnerHTML={{ __html: logo }}
         />
       ) : (
         <span className="provider-logo-fallback" aria-hidden />

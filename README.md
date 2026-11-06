@@ -25,6 +25,6 @@ bun run build
 ## Tech
 
 - Vite + React + TypeScript
-- TanStack Query
+- Shared request resources with progressive model loading and cached provider logos
 - cmdk
 - Vitest + Testing Library

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import clsx from 'clsx'
+import { classes } from '../lib/classes'
 import type { DerivedModel } from '../types/explorer'
 import { formatFullConfig } from '../lib/opencode'
 
@@ -161,7 +161,7 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
                 <button
                   key={model.id}
                   type="button"
-                  className={clsx('config-model-item', isSelected && 'config-model-active')}
+                  className={classes('config-model-item', isSelected && 'config-model-active')}
                   onClick={() => toggleModel(model.id)}
                 >
                   <div className="config-model-info">
