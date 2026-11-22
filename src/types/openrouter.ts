@@ -14,7 +14,11 @@ export type OpenRouterPricing = {
   internal_reasoning?: NumericLike | null;
   input_cache_read?: NumericLike | null;
   input_cache_write?: NumericLike | null;
+  input_cache_write_1h?: NumericLike | null;
   discount?: NumericLike | null;
+  // Tiered or conditional price overrides (e.g. higher rates past a prompt
+  // length threshold). Shape varies between sources, so it stays opaque.
+  overrides?: object | null;
 };
 
 export type OpenRouterModelArchitecture = {
@@ -90,6 +94,7 @@ export type ModelsDevProvider = {
 export type ModelsDevResponse = Record<string, ModelsDevProvider>;
 
 export type OpenRouterModel = {
+  orcaReportsCharge?: boolean;
   id: string;
   canonical_slug: string;
   hugging_face_id?: string | null;

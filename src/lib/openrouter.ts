@@ -5,6 +5,7 @@ import type {
   OpenRouterModelsResponse,
 } from "../types/openrouter";
 import { fetchOrcaModels } from "./orca";
+import { assessPricing } from "./pricing";
 
 // OpenRouter supports CORS, so we can hit it directly from the browser —
 // no proxy needed. This is the fast primary source.
@@ -125,7 +126,6 @@ function enrichModelWithModelsDev(
     },
     top_provider: {
       ...model.top_provider,
-      context_length: modelsDevModel.limit?.context ?? model.top_provider.context_length,
       max_completion_tokens: maxCompletionTokens,
     },
     supported_parameters: mergeSupportedParameters(model.supported_parameters, modelsDevModel),
@@ -158,11 +158,15 @@ export function mergeModelSources(
   }
 
   const seen = new Set<string>();
+  const orcaById = new Map(orca.data.map((model) => [model.id, model]));
   const merged = [];
 
   for (const model of or.data) {
     seen.add(model.id);
-    merged.push(enrichModelWithModelsDev(model, modelsDevModels?.[model.id]));
+    const enriched = enrichModelWithModelsDev(model, modelsDevModels?.[model.id]);
+    const alternate = orcaById.get(model.id);
+    const conflictingRate = alternate && assessPricing(alternate).status === "paid";
+    merged.push(conflictingRate ? { ...enriched, orcaReportsCharge: true } : enriched);
   }
 
   for (const model of orca.data) {

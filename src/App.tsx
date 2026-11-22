@@ -8,6 +8,7 @@ import { MetricsStrip } from "./components/MetricsStrip";
 import { ModelsTable } from "./components/ModelsTable";
 import { Toolbar } from "./components/Toolbar";
 import { useHashRouter } from "./hooks/useHashRouter";
+import { COMPACT_LAYOUT_QUERY, useMediaQuery } from "./hooks/useMediaQuery";
 import { useModels } from "./hooks/useModels";
 import { useTheme } from "./hooks/useTheme";
 import { applyExplorerFilters } from "./lib/filterSort";
@@ -32,6 +33,7 @@ function App() {
   const { state, update, toggleListFilter, clearFilters, setProviderMode, setSort } =
     useExplorerState(search);
   const { theme, toggleTheme } = useTheme();
+  const isCompactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
 
   const modelsQuery = useModels();
   const models = useMemo(() => modelsQuery.data?.data ?? [], [modelsQuery.data]);
@@ -126,7 +128,7 @@ function App() {
           onNavigateConfig={() => navigate("config")}
         />
 
-        <MetricsStrip derivedAll={derived} visible={filteredModels} />
+        {isCompactLayout ? null : <MetricsStrip derivedAll={derived} visible={filteredModels} />}
 
         <Toolbar
           state={state}
@@ -137,6 +139,20 @@ function App() {
           onClearFilters={clearFilters}
           onProviderModeChange={setProviderMode}
         />
+
+        {/* On narrow screens the four overview charts would push every result
+            below the fold, so search comes first and the charts collapse. */}
+        {isCompactLayout ? (
+          <details className="overview-collapsible">
+            <summary>
+              Overview
+              <span className="overview-collapsible-meta">
+                {filteredModels.length} shown · {freeAndUnexpired.length} free
+              </span>
+            </summary>
+            <MetricsStrip derivedAll={derived} visible={filteredModels} />
+          </details>
+        ) : null}
 
         {notice ? <p className="notice-banner">{notice}</p> : null}
 

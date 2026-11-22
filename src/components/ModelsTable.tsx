@@ -49,33 +49,70 @@ function getRowId(id: string) {
 }
 
 function formatPrice(price: number): string {
-  if (price === 0) return "free";
+  if (Number.isNaN(price) || price < 0) return "?";
+  if (price === 0) return "$0";
   const perMillion = price * 1_000_000;
   return `$${perMillion.toFixed(2)}/M`;
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+type CopyStatus = "idle" | "copied" | "failed";
+
+const COPY_STATUS_TEXT = {
+  idle: "Copy ID",
+  copied: "Copied",
+  failed: "Copy failed",
+} satisfies Record<CopyStatus, string>;
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [status, setStatus] = useState<CopyStatus>("idle");
 
   const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    const settle = (next: CopyStatus) => {
+      setStatus(next);
+      setTimeout(() => setStatus("idle"), 1500);
+    };
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(text))
+      .then(
+        () => settle("copied"),
+        () => settle("failed"),
+      );
   }, [text]);
 
   return (
     <button
       type="button"
-      className="copy-button"
+      className={clsx("copy-button", status === "copied" && "copy-button-done")}
       onClick={(e) => {
         e.stopPropagation();
         handleCopy();
       }}
-      aria-label={`Copy ${text}`}
-      title="Copy model ID"
+      aria-label={`${label}: ${text}`}
+      title={label}
     >
-      {copied ? "✓" : "⧉"}
+      <svg
+        aria-hidden
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      >
+        {status === "copied" ? (
+          <path d="M3.5 8.5l3 3 6-7" strokeLinecap="round" />
+        ) : (
+          <>
+            <rect x="5.5" y="5.5" width="8" height="8" rx="1" />
+            <path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" />
+          </>
+        )}
+      </svg>
+      <span className="copy-button-text" aria-hidden>
+        {COPY_STATUS_TEXT[status]}
+      </span>
+      <span className="sr-only" role="status">
+        {status === "copied" ? "Model ID copied" : status === "failed" ? "Copy failed" : ""}
+      </span>
     </button>
   );
 }
@@ -286,7 +323,9 @@ export function ModelsTable({
               const isOpen = expanded.has(model.id);
               const showIncompleteWarning =
                 providerMode === "include_incomplete" && !model.isProviderReady;
-              const isPaid = !model.isFree;
+              const isPaid = model.pricingStatus === "paid";
+              const isUnverified = model.pricingStatus === "unverified";
+              const pricingTitle = model.pricingNotes.join("; ") || undefined;
               const rowId = getRowId(model.id);
               const ctxPct = model.contextLength
                 ? Math.max(2, (model.contextLength / contextMax) * 100)
@@ -295,7 +334,10 @@ export function ModelsTable({
               return (
                 <Fragment key={model.id}>
                   <tr
-                    className={clsx(showIncompleteWarning && "row-warning", isPaid && "row-paid")}
+                    className={clsx(
+                      showIncompleteWarning && "row-warning",
+                      (isPaid || isUnverified) && "row-paid",
+                    )}
                   >
                     <td className="td-actions">
                       <button
@@ -317,20 +359,29 @@ export function ModelsTable({
                         <div className="model-name-cell">
                           <strong>{model.name}</strong>
                           <span className="model-id-row">
-                            {model.id}
-                            <CopyButton text={model.id} />
+                            <span className="model-id-text">{model.id}</span>
+                            <CopyButton text={model.id} label="Copy model ID" />
                           </span>
-                          {showIncompleteWarning || isPaid ? (
+                          {showIncompleteWarning || isPaid || isUnverified ? (
                             <span className="badges-row">
                               {showIncompleteWarning ? (
                                 <span
                                   className="badge badge-warning"
-                                  title="Upstream provider metadata is missing context_length for this model"
+                                  title="The provider did not report a context length for this model"
                                 >
-                                  incomplete provider limits
+                                  no provider context length
                                 </span>
                               ) : null}
-                              {isPaid ? <span className="badge badge-paid">paid</span> : null}
+                              {isPaid ? (
+                                <span className="badge badge-paid" title={pricingTitle}>
+                                  paid
+                                </span>
+                              ) : null}
+                              {isUnverified ? (
+                                <span className="badge badge-unverified" title={pricingTitle}>
+                                  price unverified
+                                </span>
+                              ) : null}
                             </span>
                           ) : null}
                         </div>
@@ -352,9 +403,16 @@ export function ModelsTable({
                     </td>
                     {pricingFilter === "all" ? (
                       <td data-label="Pricing" className="num">
-                        <div className="pricing-cell">
+                        <div className="pricing-cell" title={pricingTitle}>
                           <span>{formatPrice(model.promptPrice)}</span>
                           <span>↳ {formatPrice(model.completionPrice)}</span>
+                          {model.pricingStatus === "free" ? (
+                            <span className="pricing-extra">free</span>
+                          ) : isUnverified ? (
+                            <span className="pricing-extra">unverified</span>
+                          ) : model.promptPrice === 0 && model.completionPrice === 0 ? (
+                            <span className="pricing-extra">+ other charges</span>
+                          ) : null}
                         </div>
                       </td>
                     ) : null}

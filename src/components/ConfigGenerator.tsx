@@ -60,13 +60,28 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
     });
   };
 
-  const selectAll = () => {
-    setSelected(new Set(filtered.map((m) => m.id)));
+  // Additive: adds every model matching the current search without dropping
+  // selections made under an earlier search.
+  const selectAllMatches = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const m of filtered) next.add(m.id);
+      return next;
+    });
   };
 
   const clearAll = () => {
     setSelected(new Set());
   };
+
+  const isSearching = search.trim().length > 0;
+  const unselectedMatchCount = filtered.reduce(
+    (count, m) => count + (selected.has(m.id) ? 0 : 1),
+    0,
+  );
+  const hiddenSelectedCount = isSearching
+    ? selectedModels.length - filtered.reduce((count, m) => count + (selected.has(m.id) ? 1 : 0), 0)
+    : 0;
 
   return (
     <div className="config-page">
@@ -79,8 +94,10 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
         </div>
         <p className="config-lede">
           Select free models below to generate an <code>opencode.json</code> configuration file.
-          Models are configured under the OpenRouter provider. Set <code>OPENROUTER_API_KEY</code>{" "}
-          in your shell profile (<code>~/.bashrc</code> or <code>~/.zshrc</code>):
+          Only models whose every reported charge is $0 are listed; models with non-token charges or
+          unverified pricing are left out. Models are configured under the OpenRouter provider. Set{" "}
+          <code>OPENROUTER_API_KEY</code> in your shell profile (<code>~/.bashrc</code> or{" "}
+          <code>~/.zshrc</code>):
         </p>
         <pre className="config-env-hint">export OPENROUTER_API_KEY="sk-or-..."</pre>
       </div>
@@ -141,24 +158,42 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
         <div className="config-selector">
           <div className="config-selector-toolbar">
             <input
-              type="text"
+              type="search"
               className="config-search"
               placeholder="Search models..."
+              aria-label="Search free models"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <div className="config-selector-actions">
-              <button type="button" className="button button-small" onClick={selectAll}>
-                All
+              <button
+                type="button"
+                className="button button-small"
+                onClick={selectAllMatches}
+                disabled={unselectedMatchCount === 0}
+              >
+                {filtered.length > 0 && unselectedMatchCount === 0
+                  ? "All matches selected"
+                  : isSearching
+                    ? `Add ${unselectedMatchCount} match${unselectedMatchCount === 1 ? "" : "es"}`
+                    : "Select all matches"}
               </button>
-              <button type="button" className="button button-small" onClick={clearAll}>
-                None
+              <button
+                type="button"
+                className="button button-small"
+                onClick={clearAll}
+                disabled={selectedModels.length === 0}
+              >
+                Clear all selections
               </button>
-              <span className="config-count">{selected.size} selected</span>
+              <span className="config-count" role="status" aria-live="polite">
+                {selectedModels.length} selected
+                {hiddenSelectedCount > 0 ? ` · ${hiddenSelectedCount} hidden by search` : ""}
+              </span>
             </div>
           </div>
 
-          <div className="config-model-list">
+          <div className="config-model-list" role="group" aria-label="Free models">
             {filtered.map((model) => {
               const isSelected = selected.has(model.id);
               return (
@@ -167,7 +202,11 @@ export function ConfigGenerator({ models, onBack }: ConfigGeneratorProps) {
                   type="button"
                   className={clsx("config-model-item", isSelected && "config-model-active")}
                   onClick={() => toggleModel(model.id)}
+                  aria-pressed={isSelected}
                 >
+                  <span className="config-model-check" aria-hidden>
+                    {isSelected ? "✓" : ""}
+                  </span>
                   <div className="config-model-info">
                     <strong>{model.name}</strong>
                     <span>{model.id}</span>
