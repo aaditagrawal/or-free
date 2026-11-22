@@ -72,18 +72,22 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
   const pricing = useMemo(() => {
     let free = 0;
     let paid = 0;
+    let unverified = 0;
     for (const model of derivedAll) {
       if (!model.isUnexpired) continue;
-      if (model.isFree) free += 1;
-      else paid += 1;
+      if (model.pricingStatus === "free") free += 1;
+      else if (model.pricingStatus === "paid") paid += 1;
+      else unverified += 1;
     }
-    const total = free + paid;
+    const total = free + paid + unverified;
     return {
       free,
       paid,
+      unverified,
       total,
       freePct: total ? (free / total) * 100 : 0,
       paidPct: total ? (paid / total) * 100 : 0,
+      unverifiedPct: total ? (unverified / total) * 100 : 0,
     };
   }, [derivedAll]);
 
@@ -170,8 +174,13 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
           <span className="metric-label">Pricing mix</span>
           <span className="metric-sub">{pricing.total} active</span>
         </div>
-        <div className="splitbar" role="img" aria-label="Free vs paid">
+        <div
+          className="splitbar"
+          role="img"
+          aria-label={`${pricing.free} free, ${pricing.paid} paid, ${pricing.unverified} with unverified pricing`}
+        >
           <div className="splitbar-seg free" style={{ width: `${pricing.freePct}%` }} />
+          <div className="splitbar-seg unverified" style={{ width: `${pricing.unverifiedPct}%` }} />
           <div className="splitbar-seg paid" style={{ width: `${pricing.paidPct}%` }} />
         </div>
         <div className="splitbar-legend">
@@ -179,6 +188,12 @@ export function MetricsStrip({ derivedAll, visible }: MetricsStripProps) {
             <span className="dot dot-accent" />
             free <strong>{pricing.free}</strong>
           </span>
+          {pricing.unverified > 0 ? (
+            <span title="Zero token prices, but other charges or missing data make the price uncertain">
+              <span className="dot dot-warning" />
+              unverified <strong>{pricing.unverified}</strong>
+            </span>
+          ) : null}
           <span>
             <span className="dot dot-alt" />
             paid <strong>{pricing.paid}</strong>

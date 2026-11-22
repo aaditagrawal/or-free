@@ -50,7 +50,7 @@ describe("CommandPalette", () => {
       />,
     );
 
-    await user.click(screen.getByText(/Provider mode: Include incomplete/i));
+    await user.click(screen.getByText(/Include models without provider context length/i));
 
     expect(onProviderModeChange).toHaveBeenCalledWith("include_incomplete");
     expect(onOpenChange).toHaveBeenCalledWith(false);

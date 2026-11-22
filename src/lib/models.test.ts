@@ -106,6 +106,20 @@ describe("selectActiveModels", () => {
 });
 
 describe("models.dev enrichment", () => {
+  it("keeps the model limit without treating it as provider-reported", () => {
+    const model = buildModel({ top_provider: { context_length: null } });
+    const merged = mergeModelSources({ data: [model] }, undefined, {
+      openrouter: {
+        id: "openrouter",
+        models: { [model.id]: { id: model.id, limit: { context: 65536 } } },
+      },
+    });
+    const [result] = selectActiveModels(merged!.data, "include_incomplete", "all");
+    expect(result.contextLength).toBe(65536);
+    expect(result.isProviderReady).toBe(false);
+    expect(selectActiveModels(merged!.data, "strict", "all")).toHaveLength(0);
+  });
+
   it("applies OpenRouter model metadata from the models.dev api.json shape", () => {
     const modelsDev = {
       openrouter: {

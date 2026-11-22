@@ -69,7 +69,7 @@ function buildModel(overrides: Partial<OpenRouterModel>): OpenRouterModel {
 }
 
 describe("ModelsTable", () => {
-  it("shows incomplete provider badge only in include_incomplete mode", () => {
+  it("shows missing context length badge only when context length is not required", () => {
     const model = toDerivedModel(
       buildModel({
         id: "incomplete",
@@ -89,7 +89,7 @@ describe("ModelsTable", () => {
       />,
     );
 
-    expect(screen.queryByText(/INCOMPLETE PROVIDER LIMITS/i)).toBeNull();
+    expect(screen.queryByText(/no provider context length/i)).toBeNull();
 
     rerender(
       <ModelsTable
@@ -102,7 +102,7 @@ describe("ModelsTable", () => {
       />,
     );
 
-    expect(screen.getByText(/INCOMPLETE PROVIDER LIMITS/i)).not.toBeNull();
+    expect(screen.getByText(/no provider context length/i)).not.toBeNull();
   });
 
   it("expands row details and renders copy json button", async () => {
@@ -174,6 +174,56 @@ describe("ModelsTable", () => {
     await user.click(screen.getByRole("button", { name: /Details/i }));
 
     expect(screen.queryByRole("link", { name: "Read full description" })).toBeNull();
+  });
+
+  it("exposes a labelled copy model ID button that copies the ID", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    const model = toDerivedModel(buildModel({ id: "vendor/copy-me:free" }), "2026-02-09");
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="free"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: "Copy model ID: vendor/copy-me:free" });
+    // Reachable by keyboard: follows the Details toggle in tab order.
+    screen.getByRole("button", { name: /Details/i }).focus();
+    await user.tab();
+    expect(document.activeElement).toBe(button);
+
+    await user.click(button);
+    expect(writeText).toHaveBeenCalledWith("vendor/copy-me:free");
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Model ID copied"));
+    writeText.mockRestore();
+  });
+
+  it("badges models whose zero token price is contradicted elsewhere", () => {
+    const model = toDerivedModel(
+      buildModel({ id: "google/song", description: "Songs are priced at $0.08 per song." }),
+      "2026-02-09",
+    );
+
+    renderWithQueryClient(
+      <ModelsTable
+        models={[model]}
+        providerMode="include_incomplete"
+        pricingFilter="all"
+        sortKey="created"
+        sortDirection="desc"
+        onSortChange={vi.fn()}
+      />,
+    );
+
+    const badge = screen.getByText("price unverified");
+    expect(badge.getAttribute("title")).toContain("$0.08");
+    expect(screen.queryByText("paid")).toBeNull();
   });
 
   it("shows the provider logo for OpenRouter-style model ids", async () => {

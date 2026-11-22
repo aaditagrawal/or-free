@@ -76,17 +76,17 @@ export function CommandPalette({
       {
         id: "provider-strict",
         group: "Settings",
-        label: `Provider mode: Strict${state.providerMode === "strict" ? " (active)" : ""}`,
-        keywords: "provider mode strict complete metadata",
+        label: `Require provider-reported context length${state.providerMode === "strict" ? " (active)" : ""}`,
+        keywords: "provider mode strict complete metadata context length require",
         run: () => onProviderModeChange("strict"),
       },
       {
         id: "provider-include",
         group: "Settings",
-        label: `Provider mode: Include incomplete${
+        label: `Include models without provider context length${
           state.providerMode === "include_incomplete" ? " (active)" : ""
         }`,
-        keywords: "provider mode include incomplete warning badge",
+        keywords: "provider mode include incomplete missing context length warning badge",
         run: () => onProviderModeChange("include_incomplete"),
       },
       {

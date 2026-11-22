@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { DerivedModel } from "../types/explorer";
-import type { OpenRouterPricing } from "../types/openrouter";
 import { formatModelConfigSnippet } from "../lib/opencode";
+import { PRICING_LABELS, pricingStatusLabel } from "../lib/pricing";
 import { ProviderLogo } from "./ProviderLogo";
 
 type ModelRowExpandedProps = {
@@ -50,23 +50,6 @@ function getOpenRouterModelUrl(modelId: string): string {
   return `https://openrouter.ai/${encodedId}`;
 }
 
-const PRICING_LABELS: Array<{ key: keyof OpenRouterPricing; label: string }> = [
-  { key: "prompt", label: "Prompt" },
-  { key: "completion", label: "Completion" },
-  { key: "request", label: "Request" },
-  { key: "image", label: "Image" },
-  { key: "image_token", label: "Image token" },
-  { key: "image_output", label: "Image output" },
-  { key: "audio", label: "Audio" },
-  { key: "audio_output", label: "Audio output" },
-  { key: "input_audio_cache", label: "Audio cache" },
-  { key: "web_search", label: "Web search" },
-  { key: "internal_reasoning", label: "Internal reasoning" },
-  { key: "input_cache_read", label: "Cache read" },
-  { key: "input_cache_write", label: "Cache write" },
-  { key: "discount", label: "Discount" },
-];
-
 export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpandedProps) {
   const [copied, setCopied] = useState(false);
   const [configCopied, setConfigCopied] = useState(false);
@@ -109,7 +92,9 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
           ) : null}
         </p>
         {showIncompleteWarning && !model.isProviderReady ? (
-          <p className="warning-inline">Incomplete provider token limits in upstream metadata.</p>
+          <p className="warning-inline">
+            The provider did not report a context length for this model.
+          </p>
         ) : null}
       </div>
 
@@ -235,6 +220,21 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
 
       <div className="expanded-section">
         <h4 className="expanded-section-title">Pricing</h4>
+        <p className={`pricing-status pricing-status-${model.pricingStatus}`}>
+          <strong>{pricingStatusLabel(model.pricingStatus)}</strong>
+          {model.pricingStatus === "free"
+            ? " · every reported charge is $0"
+            : model.pricingStatus === "unverified"
+              ? " · excluded from Free only and config export until pricing is confirmed"
+              : null}
+        </p>
+        {model.pricingNotes.length > 0 ? (
+          <ul className="pricing-notes" aria-label="Pricing notes">
+            {model.pricingNotes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        ) : null}
         <dl className="expanded-grid">
           {pricingEntries.length > 0 ? (
             pricingEntries.map(({ key, label }) => (
@@ -249,6 +249,12 @@ export function ModelRowExpanded({ model, showIncompleteWarning }: ModelRowExpan
               <dd className="dd-dim">n/a</dd>
             </div>
           )}
+          {model.raw.pricing.overrides != null ? (
+            <div>
+              <dt>Tiered overrides</dt>
+              <dd className="dd-code">{JSON.stringify(model.raw.pricing.overrides)}</dd>
+            </div>
+          ) : null}
         </dl>
       </div>
 

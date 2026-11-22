@@ -2,6 +2,11 @@ import type { OpenRouterModel } from "./openrouter";
 
 export type ProviderMode = "strict" | "include_incomplete";
 export type PricingFilter = "free" | "all";
+// 'free' means every reported charge is zero and nothing suggests otherwise.
+// 'unverified' covers zero/missing token prices that other evidence (missing
+// fields, a non-token price in the description, conflicting sources)
+// contradicts. Only 'free' models count as free.
+export type PricingStatus = "free" | "paid" | "unverified";
 export type ModeratedFilter = "all" | "true" | "false";
 export type ExpiryMode = "all" | "no-expiry" | "expiring-soon";
 export type SortDirection = "asc" | "desc";
@@ -67,6 +72,8 @@ export type DerivedModel = {
   expirationDate: string | null;
   moderated: boolean;
   isFree: boolean;
+  pricingStatus: PricingStatus;
+  pricingNotes: string[];
   isUnexpired: boolean;
   isProviderReady: boolean;
 };

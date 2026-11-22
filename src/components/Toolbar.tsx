@@ -4,7 +4,6 @@ import {
   VALID_EXPIRY_MODES,
   VALID_MODERATED,
   VALID_PRICING_FILTERS,
-  VALID_PROVIDER_MODES,
   VALID_SORT_DIRECTIONS,
   VALID_SORT_KEYS,
 } from "../lib/urlState";
@@ -78,6 +77,7 @@ export function Toolbar({
   onProviderModeChange,
 }: ToolbarProps) {
   const activeFilterCount = countActiveFilters(state);
+  const requireContextLength = state.providerMode === "strict";
 
   return (
     <section className="toolbar" aria-label="Search, settings and filters">
@@ -105,21 +105,8 @@ export function Toolbar({
             }
             aria-label="Pricing filter"
           >
-            <option value="free">Free only</option>
-            <option value="all">All (incl. paid)</option>
-          </select>
-
-          <select
-            value={state.providerMode}
-            onChange={(event) =>
-              onProviderModeChange(
-                parseEnum(event.target.value, VALID_PROVIDER_MODES, state.providerMode),
-              )
-            }
-            aria-label="Provider mode"
-          >
-            <option value="include_incomplete">Incomplete</option>
-            <option value="strict">Strict</option>
+            <option value="free">Free only (verified $0)</option>
+            <option value="all">All pricing</option>
           </select>
 
           <select
@@ -174,7 +161,30 @@ export function Toolbar({
       ) : null}
 
       <details className="advanced-filters">
-        <summary>Advanced filters</summary>
+        <summary>
+          Advanced filters
+          {requireContextLength ? (
+            <span className="advanced-filters-hint">· provider context length required</span>
+          ) : null}
+        </summary>
+
+        <div className="advanced-options">
+          <label className="checkbox-field">
+            <input
+              type="checkbox"
+              checked={requireContextLength}
+              onChange={(event) =>
+                onProviderModeChange(event.target.checked ? "strict" : "include_incomplete")
+              }
+              aria-describedby="require-context-length-help"
+            />
+            <span>Require provider-reported context length</span>
+          </label>
+          <p id="require-context-length-help" className="checkbox-help">
+            Hide models whose provider did not report a context length. When off, they are shown
+            with a “no provider context length” badge.
+          </p>
+        </div>
 
         <div className="advanced-grid">
           <label className="field">

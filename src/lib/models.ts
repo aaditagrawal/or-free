@@ -1,5 +1,6 @@
 import type { DerivedModel, PricingFilter, ProviderMode } from "../types/explorer";
 import type { NumericLike, OpenRouterModel } from "../types/openrouter";
+import { assessPricing } from "./pricing";
 
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const MODELS_DEV_LOGO_BASE_URL = "https://models.dev/logos";
@@ -47,8 +48,11 @@ export function getProviderLogoUrl(providerId: string | null): string | null {
   return `${MODELS_DEV_LOGO_BASE_URL}/${encodeURIComponent(providerId)}.svg`;
 }
 
+// Zero token prices alone are not enough: non-token charges, tiered pricing,
+// conflicting sources or a price quoted in the description all disqualify a
+// model. See assessPricing for the full rule set.
 export function isFree(model: OpenRouterModel): boolean {
-  return toNumber(model.pricing.prompt) === 0 && toNumber(model.pricing.completion) === 0;
+  return assessPricing(model).status === "free";
 }
 
 export function isUnexpired(model: OpenRouterModel, todayUtc = getUtcDateStamp()): boolean {
@@ -77,6 +81,7 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
       ? null
       : toNumber(model.top_provider.max_completion_tokens);
   const providerId = getProviderId(model.id);
+  const pricing = assessPricing(model);
 
   return {
     raw: model,
@@ -111,7 +116,9 @@ export function toDerivedModel(model: OpenRouterModel, todayUtc = getUtcDateStam
     supportedParameters: model.supported_parameters ?? [],
     expirationDate: model.expiration_date ?? null,
     moderated: Boolean(model.top_provider?.is_moderated),
-    isFree: isFree(model),
+    isFree: pricing.status === "free",
+    pricingStatus: pricing.status,
+    pricingNotes: pricing.notes,
     isUnexpired: isUnexpired(model, todayUtc),
     isProviderReady: isProviderReady(model),
   };

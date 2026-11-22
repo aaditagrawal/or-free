@@ -42,7 +42,7 @@ type OrcaPricing = {
   text_cache_write: OrcaNumericString;
   text_input: OrcaNumericString;
   text_output: OrcaNumericString;
-  tiers: unknown;
+  tiers: OpenRouterPricing["overrides"];
 };
 
 type OrcaProvider = {
@@ -94,10 +94,35 @@ function isFreeModelId(id: string): boolean {
   return id.endsWith(":free") || id.includes(":free:");
 }
 
+const ORCA_SURCHARGE_KEYS = [
+  "audio_cache_write",
+  "audio_input",
+  "image_input",
+  "image_output",
+  "per_request",
+  "reasoning_output",
+  "text_cache_read",
+  "text_cache_write",
+] as const satisfies ReadonlyArray<keyof OrcaPricing>;
+
+function hasPricingTiers(tiers: OrcaPricing["tiers"]): boolean {
+  if (tiers == null) return false;
+  if (Array.isArray(tiers)) return tiers.length > 0;
+  if (tiers instanceof Object) return Object.keys(tiers).length > 0;
+  return true;
+}
+
+// A provider is free only when both token rates are explicitly zero and no
+// other charge (per-request, image, audio, reasoning, tiers) is reported.
 function isFreeProvider(provider: OrcaProvider): boolean {
   const input = numberFromString(provider.pricing.text_input);
   const output = numberFromString(provider.pricing.text_output);
-  return input === 0 && output === 0;
+  if (input !== 0 || output !== 0) return false;
+  if (hasPricingTiers(provider.pricing.tiers)) return false;
+  return ORCA_SURCHARGE_KEYS.every((key) => {
+    const value = numberFromString(provider.pricing[key]);
+    return value == null || value === 0;
+  });
 }
 
 function pickRepresentativeProvider(
@@ -126,9 +151,12 @@ function toOpenRouterPricing(pricing: OrcaPricing, isFree: boolean): OpenRouterP
     image: pricing.image_input ?? null,
     image_output: pricing.image_output ?? null,
     audio: pricing.audio_input ?? null,
+    input_audio_cache: pricing.audio_cache_write ?? null,
     internal_reasoning: pricing.reasoning_output ?? null,
     input_cache_read: pricing.text_cache_read ?? null,
     input_cache_write: pricing.text_cache_write ?? null,
+    // Carried through opaquely; any non-empty tier makes the model non-free.
+    overrides: hasPricingTiers(pricing.tiers) ? pricing.tiers : undefined,
   };
 }
 
